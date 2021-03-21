@@ -11,7 +11,8 @@ add_library(sigma STATIC ${ENGINE_SOURCES})
 
 target_include_directories(sigma PUBLIC "include/")
 target_include_directories(sigma PUBLIC "../vendor/")
-target_link_libraries(sigma ${ENGINE_LIBS} ${LIBS})
+
+target_link_libraries(sigma ${LIBS})
 
 target_precompile_headers(sigma PUBLIC include/pch.h)
 
