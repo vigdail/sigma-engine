@@ -80,8 +80,14 @@ class SimpleState : public State {
                  [](const UIEvent &e) {
                    //
                  },
-                 [](const input_event::InputEvent &e) {
-                   //
+                 [](const InputEvent::InputEvent &e) {
+                   std::visit(overloaded{
+                                [](const InputEvent::MouseMoved &p) {
+                                  std::cout << "[LOG] Mouse moved: " << p.x << ", " << p.y << std::endl;
+                                },
+                                [](auto) {},
+                              },
+                              e);
                  },
                },
                event);
@@ -147,14 +153,26 @@ class StateMachine {
  private:
   void Transit(const Transition &transition) {
     std::visit(overloaded{
-                 [](const transition::None t) {},
-                 [](const transition::Pop t) {},
-                 [](const transition::Push t) {},
-                 [](const transition::Switch t) {},
-                 [this](const transition::Quit t) { running_ = false; },
+                 [](const transition::None &t) {},
+                 [this](const transition::Pop &t) { Pop(); },
+                 [this](const transition::Push &t) { Push(t.data); },
+                 [this](const transition::Switch &t) { Switch(t.data); },
+                 [this](const transition::Quit &t) { running_ = false; },
                },
                transition);
-  }  // namespace sigma
+  }
+
+  void Pop() {
+    //
+  }
+
+  void Push(StateData data) {
+    //
+  }
+
+  void Switch(StateData data) {
+    //
+  }
 };
 
 }  // namespace sigma

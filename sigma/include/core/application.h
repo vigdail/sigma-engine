@@ -6,6 +6,7 @@
 #include "pch.h"
 #include "state.h"
 #include "system.h"
+#include "window/window.h"
 #include "world.h"
 
 #include <memory>
@@ -26,6 +27,7 @@ class Application {
   void Run() {
     std::cout << "[LOG] Application start" << std::endl;
 
+    data_->Start(world_);
     states_->Start(StateData(world_, data_));
 
     while (states_->Running()) {

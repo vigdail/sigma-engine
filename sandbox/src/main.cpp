@@ -1,4 +1,5 @@
 #include <core/application.h>
+#include <window/window.h>
 
 struct Health {
   int value;
@@ -18,20 +19,45 @@ struct GameState : public sigma::SimpleState {
 };
 
 class MySystem : public sigma::System {
+ public:
   void Update(std::shared_ptr<sigma::World> world) override {
-    std::cout << "[LOG] MySystem update: " << count++ << std::endl;
-    if (count == 5) {
-      auto &bus = world->Raw().ctx<sigma::EventBus<sigma::Event>>();
-      bus.events.push_back(sigma::WindowEvent::CloseRequested());
+    auto &bus = world->Raw().ctx<sigma::EventBus<sigma::Event>>();
+
+    for (auto &e : bus.events) {
+      std::visit(sigma::overloaded{
+                   [&](sigma::InputEvent::InputEvent ev) {
+                     std::visit(sigma::overloaded{
+                                  [](sigma::InputEvent::KeyPressed event) {
+                                    std::cout << "[LOG] Key pressed: " << static_cast<int>(event.key) << std::endl;
+                                  },
+                                  [&](sigma::InputEvent::MouseButtonPressed event) {
+                                    auto view = world->Raw().view<Health>();
+                                    for (auto entity : view) {
+                                      auto &health = world->Raw().get<Health>(entity);
+                                      health.value--;
+                                      std::cout << "[LOG] Player health: " << health.value << "/" << health.max_value
+                                                << std::endl;
+                                      if (health.value == 0) {
+                                        world->Raw().destroy(entity);
+                                        std::cout << "[LOG] Player killed" << std::endl;
+                                      }
+                                    }
+                                  },
+                                  [](auto) {},
+                                },
+                                ev);
+                   },
+                   [](auto) {},
+                 },
+                 e);
     }
   }
-
- private:
-  int count = 0;
 };
 
 int main() {
-  auto data = sigma::GameDataBuilder().WithSystem(std::make_shared<MySystem>());
+  auto data = sigma::GameDataBuilder()
+                .WithSystem(std::make_shared<sigma::WindowSystem>(sigma::WindowConfig{ 960, 540 }))
+                .WithSystem(std::make_shared<MySystem>());
   sigma::Application app(std::make_shared<GameState>(), data);
   app.Run();
 }

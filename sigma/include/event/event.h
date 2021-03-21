@@ -1,5 +1,6 @@
 #pragma once
 
+#include "event/keycodes.h"
 #include "pch.h"
 #include <string>
 #include <vector>
@@ -39,21 +40,25 @@ struct UIEvent {
   //
 };
 
-namespace input_event {
+namespace InputEvent {
 
 struct KeyPressed {
-  //
+  KeyCode key;
 };
 
 struct KeyReleased {
-  //
+  KeyCode key;
 };
-struct MouseButtonPressed {};
-struct MouseButtonReleased {};
+struct MouseButtonPressed {
+  MouseButton button;
+};
+struct MouseButtonReleased {
+  MouseButton button;
+};
 
 struct MouseMoved {
-  float delta_x;
-  float delta_y;
+  float x;
+  float y;
 };
 
 struct MouseWheelMoved {
@@ -63,8 +68,8 @@ struct MouseWheelMoved {
 using InputEvent =
   std::variant<KeyPressed, KeyReleased, MouseMoved, MouseButtonPressed, MouseButtonReleased, MouseWheelMoved>;
 
-}  // namespace input_event
+}  // namespace InputEvent
 
-using Event = std::variant<WindowEvent::WindowEvent, UIEvent, input_event::InputEvent>;
+using Event = std::variant<WindowEvent::WindowEvent, UIEvent, InputEvent::InputEvent>;
 
 }  // namespace sigma
