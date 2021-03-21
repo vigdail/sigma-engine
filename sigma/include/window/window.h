@@ -55,6 +55,7 @@ struct WindowConfig {
   int width = 800;
   int height = 600;
 };
+
 class WindowSystem : public System {
  public:
   explicit WindowSystem(WindowConfig config) : config_(config) {

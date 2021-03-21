@@ -1,5 +1,6 @@
 #pragma once
 
+#include "event/event.h"
 #include "game_data.h"
 #include "pch.h"
 #include "world.h"
@@ -64,31 +65,18 @@ class State {
 
 class SimpleState : public State {
  public:
-  Transition HandleEvent(StateData data, Event event) override {
+  Transition HandleEvent(StateData, Event event) override {
     Transition trans = transition::None();
     std::visit(overloaded{
                  [&trans](const WindowEvent::WindowEvent &e) {
                    std::visit(overloaded{
                                 [&trans](const WindowEvent::CloseRequested &) { trans = transition::Quit(); },
                                 [&trans](const WindowEvent::Destroyed &) { trans = transition::Quit(); },
-                                [&trans](const WindowEvent::Resized &) {},
-                                [&trans](const WindowEvent::Moved &) {},
-                                [&trans](const WindowEvent::Focused &) {},
+                                [](const auto &e) {},
                               },
                               e);
                  },
-                 [](const UIEvent &e) {
-                   //
-                 },
-                 [](const InputEvent::InputEvent &e) {
-                   std::visit(overloaded{
-                                [](const InputEvent::MouseMoved &p) {
-                                  std::cout << "[LOG] Mouse moved: " << p.x << ", " << p.y << std::endl;
-                                },
-                                [](auto) {},
-                              },
-                              e);
-                 },
+                 [](const auto &e) {},
                },
                event);
     return trans;
