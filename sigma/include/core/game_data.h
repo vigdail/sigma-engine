@@ -22,7 +22,7 @@ class Dispatcher {
       s->Update(world);
     }
   }
-  void AddSystem(std::shared_ptr<System> &system) {
+  void AddSystem(const std::shared_ptr<System> &system) {
     systems_.push_back(std::move(system));
   }
 
@@ -46,7 +46,6 @@ class GameData {
   Dispatcher dispatcher_;
 };
 
-// @TODO
 class GameDataBuilder {
  public:
   std::shared_ptr<GameData> Build() {

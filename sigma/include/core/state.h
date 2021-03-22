@@ -3,19 +3,13 @@
 #include "event/event.h"
 #include "game_data.h"
 #include "pch.h"
+#include "util/util.h"
 #include "world.h"
 
 #include <memory>
 #include <vector>
 
 namespace sigma {
-
-template <class... Ts>
-struct overloaded : Ts... {
-  using Ts::operator()...;
-};
-template <class... Ts>
-overloaded(Ts...) -> overloaded<Ts...>;
 
 struct StateData {
   std::shared_ptr<World> world;
@@ -25,19 +19,22 @@ struct StateData {
   }
 };
 
+class State;
+
 namespace transition {
 struct None {};
 struct Pop {};
 struct Push {
-  StateData data;
+  std::shared_ptr<State> state;
 };
 struct Switch {
-  StateData data;
+  std::shared_ptr<State> state;
 };
 struct Quit {};
 }  // namespace transition
 
-using Transition = std::variant<transition::None, transition::Pop, transition::Push, transition::Quit>;
+using Transition =
+  std::variant<transition::None, transition::Pop, transition::Push, transition::Switch, transition::Quit>;
 
 class State {
  public:
@@ -46,11 +43,11 @@ class State {
   virtual ~State() = default;
   virtual void OnStart(StateData data) {
   }
-  virtual void OnStop() {
+  virtual void OnStop(StateData data) {
   }
-  virtual void OnPause() {
+  virtual void OnPause(StateData data) {
   }
-  virtual void OnResume() {
+  virtual void OnResume(StateData data) {
   }
   virtual Transition Update(StateData data) {
     return transition::None();
@@ -110,7 +107,7 @@ class StateMachine {
     std::shared_ptr<State> state = states_.back();
     Transition transition = state->FixedUpdate(data);
 
-    Transit(transition);
+    Transit(transition, data);
   }
   void Update(StateData data) {
     if (!running_) {
@@ -120,7 +117,7 @@ class StateMachine {
     std::shared_ptr<State> state = states_.back();
     Transition transition = state->Update(data);
 
-    Transit(transition);
+    Transit(transition, data);
   }
 
   void HandleEvent(StateData data, Event event) {
@@ -131,7 +128,7 @@ class StateMachine {
     std::shared_ptr<State> state = states_.back();
     Transition transition = state->HandleEvent(data, event);
 
-    Transit(transition);
+    Transit(transition, data);
   }
 
  private:
@@ -139,27 +136,67 @@ class StateMachine {
   std::vector<std::shared_ptr<State>> states_;
 
  private:
-  void Transit(const Transition &transition) {
+  void Transit(const Transition &transition, StateData data) {
     std::visit(overloaded{
                  [](const transition::None &t) {},
-                 [this](const transition::Pop &t) { Pop(); },
-                 [this](const transition::Push &t) { Push(t.data); },
-                 [this](const transition::Switch &t) { Switch(t.data); },
-                 [this](const transition::Quit &t) { running_ = false; },
+                 [&](const transition::Pop &t) { Pop(data); },
+                 [&](const transition::Push &t) { Push(t.state, data); },
+                 [&](const transition::Switch &t) { Switch(t.state, data); },
+                 [&](const transition::Quit &t) { Stop(data); },
                },
                transition);
   }
 
-  void Pop() {
-    //
+  void Pop(StateData data) {
+    if (!running_) {
+      return;
+    }
+
+    states_.back()->OnStop(data);
+    states_.pop_back();
+
+    if (states_.size() > 0) {
+      states_.back()->OnResume(data);
+    } else {
+      running_ = false;
+    }
   }
 
-  void Push(StateData data) {
-    //
+  void Push(std::shared_ptr<State> state, StateData data) {
+    if (!running_) {
+      return;
+    }
+    states_.back()->OnPause(data);
+
+    states_.push_back(state);
+    state->OnStart(data);
   }
 
-  void Switch(StateData data) {
-    //
+  void Switch(std::shared_ptr<State> state, StateData data) {
+    if (!running_) {
+      return;
+    }
+
+    if (states_.size() > 0) {
+      states_.back()->OnStop(data);
+      states_.pop_back();
+    }
+
+    states_.push_back(state);
+    state->OnStart(data);
+  }
+
+  void Stop(StateData data) {
+    if (!running_) {
+      return;
+    }
+
+    for (auto state : states_) {
+      state->OnStop(data);
+    }
+    states_.clear();
+
+    running_ = false;
   }
 };
 

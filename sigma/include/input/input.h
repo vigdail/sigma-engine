@@ -77,6 +77,6 @@ class InputSystem : public System {
                },
                event);
   }
-};  // namespace sigma
+};
 
 }  // namespace sigma
