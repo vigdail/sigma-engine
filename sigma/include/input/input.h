@@ -48,11 +48,11 @@ class Input {
 class InputSystem : public System {
  public:
   void Start(std::shared_ptr<World> world) override {
-    world->Raw().set<Input>();
+    world->AddResource<Input>();
   }
 
   void Update(std::shared_ptr<World> world) override {
-    auto &bus = world->Raw().ctx<sigma::EventBus<sigma::Event>>();
+    auto &bus = world->Resource<sigma::EventBus<sigma::Event>>();
 
     for (auto &e : bus.events) {
       std::visit(overloaded{
@@ -65,7 +65,7 @@ class InputSystem : public System {
 
  private:
   void OnEvent(std::shared_ptr<World> world, InputEvent::InputEvent event) {
-    auto &input = world->Raw().ctx<Input>();
+    auto &input = world->Resource<Input>();
     std::visit(overloaded{
                  [&](sigma::InputEvent::KeyPressed e) { input.OnKeyPressed(e.key); },
                  [&](sigma::InputEvent::KeyReleased e) { input.OnKeyReleased(e.key); },

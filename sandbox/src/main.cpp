@@ -26,9 +26,51 @@ class CompleteSystem : public sigma::System {
   void Update(std::shared_ptr<sigma::World> world) override {
     auto view = world->Raw().view<Name, Transform, Health>();
     if (view.size() == 0) {
-      auto &bus = world->Raw().ctx<sigma::EventBus<MissionCompleteEvent>>();
+      auto &bus = world->Resource<sigma::EventBus<MissionCompleteEvent>>();
       bus.events.push_back(MissionCompleteEvent());
     }
+  }
+};
+
+bool PointInRect(int x, int y, Transform rect) {
+  return ((x >= rect.x && x <= rect.x + rect.width) && (y >= rect.y && y <= rect.y + rect.height));
+}
+
+class MySystem : public sigma::System {
+ public:
+  void Update(std::shared_ptr<sigma::World> world) override {
+    auto &bus = world->Resource<sigma::EventBus<sigma::Event>>();
+
+    for (auto &e : bus.events) {
+      std::visit(sigma::overloaded{
+                   [&](sigma::InputEvent::InputEvent ev) {
+                     std::visit(sigma::overloaded{
+                                  [&](sigma::InputEvent::MouseButtonPressed event) { OnMousePressed(world); },
+                                  [](auto) {},
+                                },
+                                ev);
+                   },
+                   [](auto) {},
+                 },
+                 e);
+    }
+  }
+
+  void OnMousePressed(std::shared_ptr<sigma::World> world) {
+    auto &input = world->Resource<sigma::Input>();
+    auto mousePos = input.GetMousePosition();
+    std::cout << "[LOG] Mouse clicked: " << mousePos.x << ", " << mousePos.y << std::endl;
+    world->Raw().view<Name, Transform, Health>().each([&](auto entity, auto &name, auto &transform, auto &health) {
+      if (!PointInRect(mousePos.x, mousePos.y, transform)) {
+        return;
+      }
+      health.value--;
+      std::cout << "[LOG] " << name.name << " health: " << health.value << "/" << health.max_value << std::endl;
+      if (health.value == 0) {
+        world->Raw().destroy(entity);
+        std::cout << "[LOG] " << name.name << " killed" << std::endl;
+      }
+    });
   }
 };
 
@@ -52,7 +94,7 @@ struct GameState : public sigma::SimpleState {
     goblin.AddComponent<Health>(5, 5);
     goblin.AddComponent<Transform>(150, 10, 100, 100);
 
-    stateData.world->Raw().set<sigma::EventBus<MissionCompleteEvent>>();
+    stateData.world->AddResource<sigma::EventBus<MissionCompleteEvent>>();
 
     dispatcher_.Start(stateData.world);
   }
@@ -60,7 +102,7 @@ struct GameState : public sigma::SimpleState {
   sigma::Transition Update(sigma::StateData stateData) override {
     dispatcher_.Update(stateData.world);
 
-    if (stateData.world->Raw().ctx<sigma::EventBus<MissionCompleteEvent>>().events.size() > 0) {
+    if (stateData.world->Resource<sigma::EventBus<MissionCompleteEvent>>().events.size() > 0) {
       return sigma::transition::Quit();
     }
     return sigma::transition::None();
@@ -77,48 +119,6 @@ struct LoadingState : public sigma::SimpleState {
   }
   sigma::Transition Update(sigma::StateData stateData) override {
     return sigma::transition::Switch{ std::make_shared<GameState>() };
-  }
-};
-
-bool PointInRect(int x, int y, Transform rect) {
-  return ((x >= rect.x && x <= rect.x + rect.width) && (y >= rect.y && y <= rect.y + rect.height));
-}
-
-class MySystem : public sigma::System {
- public:
-  void Update(std::shared_ptr<sigma::World> world) override {
-    auto &bus = world->Raw().ctx<sigma::EventBus<sigma::Event>>();
-
-    for (auto &e : bus.events) {
-      std::visit(sigma::overloaded{
-                   [&](sigma::InputEvent::InputEvent ev) {
-                     std::visit(sigma::overloaded{
-                                  [&](sigma::InputEvent::MouseButtonPressed event) { OnMousePressed(world); },
-                                  [](auto) {},
-                                },
-                                ev);
-                   },
-                   [](auto) {},
-                 },
-                 e);
-    }
-  }
-
-  void OnMousePressed(std::shared_ptr<sigma::World> world) {
-    auto &input = world->Raw().ctx<sigma::Input>();
-    auto mousePos = input.GetMousePosition();
-    std::cout << "[LOG] Mouse clicked: " << mousePos.x << ", " << mousePos.y << std::endl;
-    world->Raw().view<Name, Transform, Health>().each([&](auto entity, auto &name, auto &transform, auto &health) {
-      if (!PointInRect(mousePos.x, mousePos.y, transform)) {
-        return;
-      }
-      health.value--;
-      std::cout << "[LOG] " << name.name << " health: " << health.value << "/" << health.max_value << std::endl;
-      if (health.value == 0) {
-        world->Raw().destroy(entity);
-        std::cout << "[LOG] " << name.name << " killed" << std::endl;
-      }
-    });
   }
 };
 
