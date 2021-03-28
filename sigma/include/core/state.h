@@ -12,10 +12,10 @@
 namespace sigma {
 
 struct StateData {
-  std::shared_ptr<World> world;
-  std::shared_ptr<GameData> data;
+  World &world;
+  GameData &data;
   StateData() = default;
-  StateData(std::shared_ptr<World> world, std::shared_ptr<GameData> data) : world(world), data(data) {
+  StateData(World &world, GameData &data) : world(world), data(data) {
   }
 };
 
@@ -25,10 +25,10 @@ namespace transition {
 struct None {};
 struct Pop {};
 struct Push {
-  std::shared_ptr<State> state;
+  Ref<State> state;
 };
 struct Switch {
-  std::shared_ptr<State> state;
+  Ref<State> state;
 };
 struct Quit {};
 }  // namespace transition
@@ -82,7 +82,7 @@ class SimpleState : public State {
 
 class StateMachine {
  public:
-  explicit StateMachine(std::shared_ptr<State> state) {
+  explicit StateMachine(Ref<State> state) {
     running_ = false;
     states_ = { state };
   }
@@ -104,7 +104,7 @@ class StateMachine {
       return;
     }
 
-    std::shared_ptr<State> state = states_.back();
+    Ref<State> state = states_.back();
     Transition transition = state->FixedUpdate(data);
 
     Transit(transition, data);
@@ -114,7 +114,7 @@ class StateMachine {
       return;
     }
 
-    std::shared_ptr<State> state = states_.back();
+    Ref<State> state = states_.back();
     Transition transition = state->Update(data);
 
     Transit(transition, data);
@@ -125,7 +125,7 @@ class StateMachine {
       return;
     }
 
-    std::shared_ptr<State> state = states_.back();
+    Ref<State> state = states_.back();
     Transition transition = state->HandleEvent(data, event);
 
     Transit(transition, data);
@@ -133,7 +133,7 @@ class StateMachine {
 
  private:
   bool running_;
-  std::vector<std::shared_ptr<State>> states_;
+  std::vector<Ref<State>> states_;
 
  private:
   void Transit(const Transition &transition, StateData data) {
@@ -162,7 +162,7 @@ class StateMachine {
     }
   }
 
-  void Push(std::shared_ptr<State> state, StateData data) {
+  void Push(Ref<State> state, StateData data) {
     if (!running_) {
       return;
     }
@@ -172,7 +172,7 @@ class StateMachine {
     state->OnStart(data);
   }
 
-  void Switch(std::shared_ptr<State> state, StateData data) {
+  void Switch(Ref<State> state, StateData data) {
     if (!running_) {
       return;
     }

@@ -60,15 +60,15 @@ class WindowSystem : public System {
  public:
   explicit WindowSystem(WindowConfig config) : config_(config) {
   }
-  void Start(std::shared_ptr<World> world) override {
-    world->AddResource<Window>(config_.width, config_.height);
+  void Start(World &world) override {
+    world.AddResource<Window>(config_.width, config_.height);
   }
 
-  void Update(std::shared_ptr<World> world) override {
-    auto &window = world->Resource<Window>();
+  void Update(World &world) override {
+    auto &window = world.Resource<Window>();
     window.SwapBuffers();
 
-    world->AddResource<EventBus<Event>>(std::move(window.PollEvents()));
+    world.AddResource<EventBus<Event>>(std::move(window.PollEvents()));
   }
 
  private:

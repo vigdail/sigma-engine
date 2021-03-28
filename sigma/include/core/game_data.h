@@ -12,12 +12,12 @@ namespace sigma {
 class Dispatcher {
  public:
   Dispatcher() = default;
-  void Start(std::shared_ptr<World> world) {
+  void Start(World &world) {
     for (auto &s : systems_) {
       s->Start(world);
     }
   }
-  void Update(std::shared_ptr<World> world) {
+  void Update(World &world) {
     for (auto &s : systems_) {
       s->Update(world);
     }
@@ -35,10 +35,10 @@ class GameData {
   GameData() = default;
   explicit GameData(Dispatcher dispatcher) : dispatcher_(dispatcher) {
   }
-  void Start(std::shared_ptr<World> world) {
+  void Start(World &world) {
     dispatcher_.Start(world);
   }
-  void Update(std::shared_ptr<World> world) {
+  void Update(World &world) {
     dispatcher_.Update(world);
   }
 
@@ -48,8 +48,8 @@ class GameData {
 
 class GameDataBuilder {
  public:
-  std::shared_ptr<GameData> Build() {
-    return std::make_shared<GameData>(std::move(dispatcher_));
+  GameData Build() {
+    return GameData(std::move(dispatcher_));
   }
 
   GameDataBuilder &WithSystem(std::shared_ptr<System> system) {
