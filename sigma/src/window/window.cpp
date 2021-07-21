@@ -105,7 +105,7 @@ void Window::SetupCallbacks() {
 
   glfwSetCursorPosCallback(window_, [](GLFWwindow *window, double x, double y) {
     auto self = static_cast<Window *>(glfwGetWindowUserPointer(window));
-    InputEvent::MouseMoved event{ x, y };
+    InputEvent::MouseMoved event{ static_cast<float>(x), static_cast<float>(y) };
     self->events_.push_back(event);
   });
 

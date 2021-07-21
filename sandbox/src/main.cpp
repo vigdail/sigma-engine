@@ -68,8 +68,8 @@ class MySystem : public sigma::System {
         health.value--;
         std::cout << "[LOG] " << name.name << " health: " << health.value << "/" << health.max_value << std::endl;
         if (health.value == 0) {
-          world.Raw().destroy(entity);
           std::cout << "[LOG] " << name.name << " killed" << std::endl;
+          world->Raw().destroy(entity);
         }
       });
   }
