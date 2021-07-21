@@ -2,67 +2,67 @@
 
 namespace sigma {
 
-void Input::Update() {
-  for (auto &key : key_states_) {
-    CycleKeyState(key.second);
+void Input::update() {
+  for (auto& key : key_states_) {
+    cycleKeyState(key.second);
   }
-  for (auto &button : mouse_button_states_) {
-    CycleKeyState(button.second);
+  for (auto& button : mouse_button_states_) {
+    cycleKeyState(button.second);
   }
 }
 
-KeyState Input::GetKeyState(KeyCode key) const {
+KeyState Input::getKeyState(KeyCode key) const {
   auto it = key_states_.find(key);
   if (it != key_states_.cend()) {
     return it->second;
   }
 
-  return KeyState::Up;
+  return KeyState::UP;
 }
 
-KeyState Input::GetMouseButtonState(MouseButton button) const {
+KeyState Input::getMouseButtonState(MouseButton button) const {
   auto it = mouse_button_states_.find(button);
   if (it != mouse_button_states_.cend()) {
     return it->second;
   }
 
-  return KeyState::Up;
+  return KeyState::UP;
 }
 
-glm::vec2 Input::GetMousePosition() const {
+glm::vec2 Input::getMousePosition() const {
   return mouse_position_;
 }
-glm::vec2 Input::GetMouseMove() const {
+glm::vec2 Input::getMouseMove() const {
   return mouse_move_;
 }
 
-void Input::OnKeyPressed(KeyCode key) {
-  key_states_[key] = KeyState::Pressed;
+void Input::onKeyPressed(KeyCode key) {
+  key_states_[key] = KeyState::PRESSED;
 }
 
-void Input::OnKeyReleased(KeyCode key) {
-  key_states_[key] = KeyState::Released;
+void Input::onKeyReleased(KeyCode key) {
+  key_states_[key] = KeyState::RELEASED;
 }
 
-void Input::OnMouseMoved(float x, float y) {
+void Input::onMouseMoved(float x, float y) {
   glm::vec2 pos(x, y);
   mouse_move_ = pos - mouse_position_;
   mouse_position_ = pos;
 }
 
-void Input::OnMouseButtonPressed(MouseButton button) {
-  mouse_button_states_[button] = KeyState::Pressed;
+void Input::onMouseButtonPressed(MouseButton button) {
+  mouse_button_states_[button] = KeyState::PRESSED;
 }
 
-void Input::OnMouseButtonReleased(MouseButton button) {
-  mouse_button_states_[button] = KeyState::Released;
+void Input::onMouseButtonReleased(MouseButton button) {
+  mouse_button_states_[button] = KeyState::RELEASED;
 }
 
-void Input::CycleKeyState(KeyState &state) {
-  if (state == KeyState::Pressed) {
-    state = KeyState::Down;
-  } else if (state == KeyState::Released) {
-    state = KeyState::Up;
+void Input::cycleKeyState(KeyState& state) {
+  if (state == KeyState::PRESSED) {
+    state = KeyState::DOWN;
+  } else if (state == KeyState::RELEASED) {
+    state = KeyState::UP;
   }
 }
 

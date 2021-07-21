@@ -7,7 +7,6 @@
 #include <utility>
 
 namespace sigma {
-using vec2 = glm::vec2;
 
 template <typename T>
 using Scope = std::unique_ptr<T>;

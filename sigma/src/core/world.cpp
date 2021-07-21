@@ -4,7 +4,7 @@
 
 namespace sigma {
 
-Entity World::CreateEntity() {
+Entity World::createEntity() {
   return Entity(this);
 }
 

@@ -21,34 +21,34 @@ class Window {
  public:
   Window(int width, int height) noexcept;
   ~Window();
-  std::vector<Event> PollEvents();
-  void SwapBuffers() const;
-  int GetWidth() const {
+  std::vector<Event> pollEvents();
+  void swapBuffers() const;
+  int getWidth() const {
     return width_;
   }
-  int GetHeight() const {
+  int getHeight() const {
     return height_;
   }
-  void SetTitle(std::string title) const;
-  bool ShouldClose() const {
+  void setTitle(std::string title) const;
+  bool shouldClose() const {
     return glfwWindowShouldClose(window_);
   }
-  void HideCursor();
-  void ShowCursor();
-  void ToggleCursor();
-  bool IsCursorHidden() const;
+  void hideCursor();
+  void showCursor();
+  void toggleCursor();
+  bool isCursorHidden() const;
 
  private:
-  GLFWwindow *window_;
+  GLFWwindow* window_;
   int width_;
   int height_;
   std::vector<Event> events_;
 
  private:
-  void InitOpenGL();
-  void CreateWindow();
-  void SetupCallbacks();
-  void MoveToCenter();
+  void initOpenGl();
+  void createWindow();
+  void setupCallbacks();
+  void moveToCenter();
 };
 
 struct WindowConfig {
@@ -60,15 +60,15 @@ class WindowSystem : public System {
  public:
   explicit WindowSystem(WindowConfig config) : config_(config) {
   }
-  void Start(World &world) override {
-    world.AddResource<Window>(config_.width, config_.height);
+  void start(World& world) override {
+    world.addResource<Window>(config_.width, config_.height);
   }
 
-  void Update(World &world) override {
-    auto &window = world.Resource<Window>();
-    window.SwapBuffers();
+  void update(World& world) override {
+    auto& window = world.resource<Window>();
+    window.swapBuffers();
 
-    world.AddResource<EventBus<Event>>(std::move(window.PollEvents()));
+    world.addResource<EventBus<Event>>(std::move(window.pollEvents()));
   }
 
  private:

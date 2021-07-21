@@ -9,9 +9,9 @@ namespace sigma {
 class System {
  public:
   virtual ~System() = default;
-  virtual void Start(World &world) {
+  virtual void start(World& world) {
   }
-  virtual void Update(World &world) = 0;
+  virtual void update(World& world) = 0;
 };
 
 }  // namespace sigma

@@ -12,10 +12,9 @@
 namespace sigma {
 
 struct StateData {
-  World &world;
-  GameData &data;
-  StateData() = default;
-  StateData(World &world, GameData &data) : world(world), data(data) {
+  World& world;
+  GameData& data;
+  StateData(World& world, GameData& data) : world(world), data(data) {
   }
 };
 
@@ -31,49 +30,49 @@ struct Switch {
   Ref<State> state;
 };
 struct Quit {};
-}  // namespace transition
+}// namespace transition
 
 using Transition =
-  std::variant<transition::None, transition::Pop, transition::Push, transition::Switch, transition::Quit>;
+    std::variant<transition::None, transition::Pop, transition::Push, transition::Switch, transition::Quit>;
 
 class State {
  public:
   State() {
   }
   virtual ~State() = default;
-  virtual void OnStart(StateData data) {
+  virtual void onStart(StateData data) {
   }
-  virtual void OnStop(StateData data) {
+  virtual void onStop(StateData data) {
   }
-  virtual void OnPause(StateData data) {
+  virtual void onPause(StateData data) {
   }
-  virtual void OnResume(StateData data) {
+  virtual void onResume(StateData data) {
   }
-  virtual Transition Update(StateData data) {
+  virtual Transition update(StateData data) {
     return transition::None();
   }
-  virtual Transition FixedUpdate(StateData data) {
+  virtual Transition fixedUpdate(StateData data) {
     return transition::None();
   }
-  virtual Transition HandleEvent(StateData data, Event event) {
+  virtual Transition handleEvent(StateData data, Event event) {
     return transition::None();
   }
 };
 
 class SimpleState : public State {
  public:
-  Transition HandleEvent(StateData, Event event) override {
+  Transition handleEvent(StateData, Event event) override {
     Transition trans = transition::None();
     std::visit(overloaded{
-                 [&trans](const WindowEvent::WindowEvent &e) {
-                   std::visit(overloaded{
-                                [&trans](const WindowEvent::CloseRequested &) { trans = transition::Quit(); },
-                                [&trans](const WindowEvent::Destroyed &) { trans = transition::Quit(); },
-                                [](const auto &e) {},
-                              },
-                              e);
-                 },
-                 [](const auto &e) {},
+                   [&trans](const window_event::WindowEvent& e) {
+                     std::visit(overloaded{
+                                    [&trans](const window_event::CloseRequested&) { trans = transition::Quit(); },
+                                    [&trans](const window_event::Destroyed&) { trans = transition::Quit(); },
+                                    [](const auto& e) {},
+                                },
+                                e);
+                   },
+                   [](const auto& e) {},
                },
                event);
     return trans;
@@ -84,51 +83,51 @@ class StateMachine {
  public:
   explicit StateMachine(Ref<State> state) {
     running_ = false;
-    states_ = { state };
+    states_ = {state};
   }
-  bool Running() {
+  bool running() {
     return running_;
   }
 
-  void Start(StateData data) {
+  void start(StateData data) {
     if (!running_) {
       auto state = states_.back();
-      state->OnStart(data);
+      state->onStart(data);
 
       running_ = true;
     }
   }
 
-  void FixedUpdate(StateData data) {
+  void fixedUpdate(StateData data) {
     if (!running_) {
       return;
     }
 
     Ref<State> state = states_.back();
-    Transition transition = state->FixedUpdate(data);
+    Transition transition = state->fixedUpdate(data);
 
-    Transit(transition, data);
+    transit(transition, data);
   }
-  void Update(StateData data) {
+  void update(StateData data) {
     if (!running_) {
       return;
     }
 
     Ref<State> state = states_.back();
-    Transition transition = state->Update(data);
+    Transition transition = state->update(data);
 
-    Transit(transition, data);
+    transit(transition, data);
   }
 
-  void HandleEvent(StateData data, Event event) {
+  void handleEvent(StateData data, Event event) {
     if (!running_) {
       return;
     }
 
     Ref<State> state = states_.back();
-    Transition transition = state->HandleEvent(data, event);
+    Transition transition = state->handleEvent(data, event);
 
-    Transit(transition, data);
+    transit(transition, data);
   }
 
  private:
@@ -136,63 +135,63 @@ class StateMachine {
   std::vector<Ref<State>> states_;
 
  private:
-  void Transit(const Transition &transition, StateData data) {
+  void transit(const Transition& transition, StateData data) {
     std::visit(overloaded{
-                 [](const transition::None &t) {},
-                 [&](const transition::Pop &t) { Pop(data); },
-                 [&](const transition::Push &t) { Push(t.state, data); },
-                 [&](const transition::Switch &t) { Switch(t.state, data); },
-                 [&](const transition::Quit &t) { Stop(data); },
+                   [](const transition::None& t) {},
+                   [&](const transition::Pop& t) { pop(data); },
+                   [&](const transition::Push& t) { push(t.state, data); },
+                   [&](const transition::Switch& t) { switchTo(t.state, data); },
+                   [&](const transition::Quit& t) { stop(data); },
                },
                transition);
   }
 
-  void Pop(StateData data) {
+  void pop(StateData data) {
     if (!running_) {
       return;
     }
 
-    states_.back()->OnStop(data);
+    states_.back()->onStop(data);
     states_.pop_back();
 
     if (states_.size() > 0) {
-      states_.back()->OnResume(data);
+      states_.back()->onResume(data);
     } else {
       running_ = false;
     }
   }
 
-  void Push(Ref<State> state, StateData data) {
+  void push(Ref<State> state, StateData data) {
     if (!running_) {
       return;
     }
-    states_.back()->OnPause(data);
+    states_.back()->onPause(data);
 
     states_.push_back(state);
-    state->OnStart(data);
+    state->onStart(data);
   }
 
-  void Switch(Ref<State> state, StateData data) {
+  void switchTo(Ref<State> state, StateData data) {
     if (!running_) {
       return;
     }
 
     if (states_.size() > 0) {
-      states_.back()->OnStop(data);
+      states_.back()->onStop(data);
       states_.pop_back();
     }
 
     states_.push_back(state);
-    state->OnStart(data);
+    state->onStart(data);
   }
 
-  void Stop(StateData data) {
+  void stop(StateData data) {
     if (!running_) {
       return;
     }
 
     for (auto state : states_) {
-      state->OnStop(data);
+      state->onStop(data);
     }
     states_.clear();
 
@@ -200,4 +199,4 @@ class StateMachine {
   }
 };
 
-}  // namespace sigma
+}// namespace sigma

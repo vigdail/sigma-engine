@@ -12,17 +12,17 @@ namespace sigma {
 class Dispatcher {
  public:
   Dispatcher() = default;
-  void Start(World &world) {
-    for (auto &s : systems_) {
-      s->Start(world);
+  void start(World& world) {
+    for (auto& s : systems_) {
+      s->start(world);
     }
   }
-  void Update(World &world) {
-    for (auto &s : systems_) {
-      s->Update(world);
+  void update(World& world) {
+    for (auto& s : systems_) {
+      s->update(world);
     }
   }
-  void AddSystem(const std::shared_ptr<System> &system) {
+  void addSystem(const std::shared_ptr<System>& system) {
     systems_.push_back(std::move(system));
   }
 
@@ -35,11 +35,11 @@ class GameData {
   GameData() = default;
   explicit GameData(Dispatcher dispatcher) : dispatcher_(dispatcher) {
   }
-  void Start(World &world) {
-    dispatcher_.Start(world);
+  void start(World& world) {
+    dispatcher_.start(world);
   }
-  void Update(World &world) {
-    dispatcher_.Update(world);
+  void update(World& world) {
+    dispatcher_.update(world);
   }
 
  protected:
@@ -48,12 +48,12 @@ class GameData {
 
 class GameDataBuilder {
  public:
-  GameData Build() {
+  GameData build() {
     return GameData(std::move(dispatcher_));
   }
 
-  GameDataBuilder &WithSystem(std::shared_ptr<System> system) {
-    dispatcher_.AddSystem(system);
+  GameDataBuilder& withSystem(std::shared_ptr<System> system) {
+    dispatcher_.addSystem(system);
 
     return *this;
   }

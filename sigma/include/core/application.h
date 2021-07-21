@@ -18,33 +18,33 @@ namespace sigma {
 class Application {
  public:
   Application(Ref<State> state, GameDataBuilder dataBuilder)
-    : data_(dataBuilder.Build()), states_(StateMachine(state)) {
-    world_.AddResource<EventBus<Event>>();
+      : data_(dataBuilder.build()), states_(StateMachine(state)) {
+    world_.addResource<EventBus<Event>>();
   }
 
   virtual ~Application() = default;
 
-  void Run() {
+  void run() {
     std::cout << "[LOG] Application start" << std::endl;
 
-    data_.Start(world_);
-    states_.Start(StateData(world_, data_));
+    data_.start(world_);
+    states_.start(StateData(world_, data_));
 
-    while (states_.Running()) {
-      data_.Update(world_);
-      states_.Update(StateData(world_, data_));
+    while (states_.running()) {
+      data_.update(world_);
+      states_.update(StateData(world_, data_));
 
-      auto &events = world_.Resource<EventBus<Event>>().events;
+      auto& events = world_.resource<EventBus<Event>>().events;
 
       for (Event e : events) {
-        states_.HandleEvent(StateData(world_, data_), e);
+        states_.handleEvent(StateData(world_, data_), e);
       }
       events.clear();
     }
 
     std::cout << "[LOG] Application shutdown" << std::endl;
   }
-  World &GetWorld() {
+  World& getWorld() {
     return world_;
   }
 

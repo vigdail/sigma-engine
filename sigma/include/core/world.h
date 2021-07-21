@@ -13,17 +13,17 @@ class World {
  public:
   World() = default;
   ~World() = default;
-  Entity CreateEntity();
-  template <typename T>
-  T &Resource() {
+  Entity createEntity();
+  template<typename T>
+  T& resource() {
     return registry_.ctx<T>();
   }
-  template <typename T, typename... Args>
-  T &AddResource(Args &&... resource) {
+  template<typename T, typename... Args>
+  T& addResource(Args&&... resource) {
     return registry_.set<T>(std::forward<Args>(resource)...);
   }
 
-  entt::registry &Raw() {
+  entt::registry& raw() {
     return registry_;
   }
 
