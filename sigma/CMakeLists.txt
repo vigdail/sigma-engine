@@ -5,7 +5,7 @@ file(GLOB_RECURSE ENGINE_SOURCES
         ${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp
         )
 
-SET(ENGINE_SOURCES ${ENGINE_SOURCES} ${ENGINE_INCLUDES})
+SET(ENGINE_SOURCES ${ENGINE_SOURCES} ${ENGINE_INCLUDES} include/render/shader.cpp include/render/shader.h)
 
 add_library(sigma STATIC ${ENGINE_SOURCES})
 

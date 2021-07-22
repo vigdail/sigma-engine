@@ -17,8 +17,8 @@ namespace sigma {
 
 class Application {
  public:
-  Application(Ref<State> state, GameDataBuilder dataBuilder)
-      : data_(dataBuilder.build()), states_(StateMachine(state)) {
+  Application(Ref<State> state, GameDataBuilder data_builder)
+      : data_(data_builder.build()), states_(StateMachine(state)) {
     world_.addResource<EventBus<Event>>();
   }
 
