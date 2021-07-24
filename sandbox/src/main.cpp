@@ -1,4 +1,5 @@
 #include <core/application.h>
+#include <render/shader.h>
 #include <input/input.h>
 #include <window/window.h>
 
@@ -116,6 +117,11 @@ struct LoadingState : public sigma::SimpleState {
  public:
   void onStart(sigma::StateData state_data) override {
     std::cout << "[LOG] Loading start" << std::endl;
+
+    sigma::Shader shader = sigma::ShaderBuilder()
+        .loadModule("../assets/shaders/solid_color.vert", sigma::ShaderStage::VERTEX)
+        .loadModule("../assets/shaders/solid_color.frag", sigma::ShaderStage::FRAGMENT)
+        .build();
   }
   sigma::Transition update(sigma::StateData state_data) override {
     return sigma::transition::Switch{std::make_shared<GameState>()};
