@@ -70,8 +70,6 @@ TextureBuilder& TextureBuilder::load(std::string_view path) {
     view_.internal_format = GL_RGBA;
   }
 
-  std::cout << view_.width << " " << view_.height << '\n';
-
   return *this;
 }
 

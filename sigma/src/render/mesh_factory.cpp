@@ -9,7 +9,7 @@ MeshHandle MeshFactory::createQuad() {
       {glm::vec3(1.0f, 0.0f, 0.0f), glm::vec2(1.0f, 1.0f)},
       {glm::vec3(1.0f, 1.0f, 0.0f), glm::vec2(1.0f, 0.0f)},
   };
-  std::vector<uint32_t> indices = {0, 1, 2, 2, 1, 3};
+  std::vector<uint32_t> indices = {0, 2, 1, 2, 3, 1};
 
   MeshHandle mesh = createRef<Mesh>(PrimitiveTopology::TRIANGLE, indices.size());
   mesh->addVertexBuffer(VertexBuffer(vertices, SimpleVertex::getLayout()));
