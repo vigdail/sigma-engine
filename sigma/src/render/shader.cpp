@@ -1,3 +1,4 @@
+#include <glm/gtc/type_ptr.hpp>
 #include "render/shader.h"
 
 namespace sigma {
@@ -39,7 +40,7 @@ void ShaderModule::checkCompileErrors() {
     glGetShaderInfoLog(id_, max_log_size, nullptr,
                        static_cast<char*>(info_log));
     std::cerr << "ShaderModule compilation error: " << id_ << " " << info_log
-              << '\n';
+        << '\n';
   }
 }
 
@@ -81,6 +82,18 @@ void Shader::checkLinkingErrors() {
   }
 }
 
+void Shader::bind() const {
+  glUseProgram(id_);
+}
+
+void Shader::unbind() const {
+  glUseProgram(0);
+}
+
+void Shader::setMat4(const char* name, const glm::mat4& value) const {
+  glUniformMatrix4fv(glGetUniformLocation(id_, name), 1, false, glm::value_ptr(value));
+}
+
 ShaderBuilder& ShaderBuilder::loadModule(const std::filesystem::path& path,
                                          ShaderStage stage) {
   std::string source = loadFile(path);
@@ -90,6 +103,6 @@ ShaderBuilder& ShaderBuilder::loadModule(const std::filesystem::path& path,
   return *this;
 }
 
-Shader ShaderBuilder::build() const { return Shader{modules_}; }
+ShaderHandle ShaderBuilder::build() const { return createRef<Shader>(modules_); }
 
 }// namespace sigma

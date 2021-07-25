@@ -1,10 +1,6 @@
 #version 330 core
 
-// uniform mat4 model;
-// uniform mat4 view;
-// uniform mat4 projection;
-
-uniform vec3 color = vec3(1.0f);
+uniform vec3 color = vec3(1.0, 0.0, 0.0);
 
 out vec4 fragColor;
 

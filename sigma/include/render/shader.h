@@ -35,10 +35,15 @@ class ShaderModule final : public NonCopyable {
 
 class Shader final : public NonCopyable {
  public:
+  Shader() = default;
   explicit Shader(const std::vector<ShaderModule>& modules) noexcept;
   Shader(Shader&& other) noexcept;
   Shader& operator=(Shader&& other) noexcept;
   ~Shader();
+
+  void bind() const;
+  void unbind() const;
+  void setMat4(const char* name, const glm::mat4& value) const;
 
  private:
   uint32_t id_;
@@ -47,11 +52,13 @@ class Shader final : public NonCopyable {
   void checkLinkingErrors();
 };
 
+using ShaderHandle = Ref<Shader>;
+
 class ShaderBuilder {
 
  public:
   ShaderBuilder& loadModule(const std::filesystem::path& path, ShaderStage stage);
-  Shader build() const;
+  ShaderHandle build() const;
 
  private:
   std::vector<ShaderModule> modules_{};
