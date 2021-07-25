@@ -43,10 +43,14 @@ class GameState : public sigma::SimpleState {
         .loadModule("../assets/shaders/solid_color.frag", sigma::ShaderStage::FRAGMENT)
         .build();
 
+    auto texture = sigma::TextureBuilder()
+        .load("../assets/textures/cross.png")
+        .build();
+
     auto cube = world.createEntity();
     cube.addComponent<sigma::Transform>(glm::vec3(0.0f, 0.0f, 0.0f));
     cube.addComponent<sigma::MeshComponent>(mesh);
-    cube.addComponent<sigma::Material>(shader);
+    cube.addComponent<sigma::Material>(shader, texture);
 
     dispatcher_.start(state_data.world);
   }

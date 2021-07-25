@@ -4,6 +4,7 @@
 #include "core/system.h"
 #include "mesh.h"
 #include "mesh_factory.h"
+#include "texture.h"
 
 namespace sigma {
 
@@ -13,13 +14,14 @@ struct MeshComponent {
 
 struct Material {
   ShaderHandle shader;
+  TextureHandle diffuse;
 };
 
 class RenderSystem : public System {
 
  public:
   void start(World& world) override {
-    glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+    glClearColor(0.1f, 0.2f, 0.3f, 1.0f);
     glEnable(GL_CULL_FACE);
     glEnable(GL_DEPTH_TEST);
   }
@@ -41,6 +43,7 @@ class RenderSystem : public System {
       shader->setMat4("view", camera.view);
       shader->setMat4("proj", camera.projection);
       shader->setMat4("model", transform.transform());
+      material.diffuse->bind(0);
 
       mesh.mesh->bind();
       if (mesh.mesh->isIndexed()) {
