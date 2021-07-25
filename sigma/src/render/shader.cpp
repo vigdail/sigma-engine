@@ -94,6 +94,10 @@ void Shader::setMat4(const char* name, const glm::mat4& value) const {
   glUniformMatrix4fv(glGetUniformLocation(id_, name), 1, false, glm::value_ptr(value));
 }
 
+void Shader::setInt(const char* name, int value) const {
+  glUniform1i(glGetUniformLocation(id_, name), value);
+}
+
 ShaderBuilder& ShaderBuilder::loadModule(const std::filesystem::path& path,
                                          ShaderStage stage) {
   std::string source = loadFile(path);

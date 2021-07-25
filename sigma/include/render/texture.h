@@ -58,6 +58,7 @@ class TextureBuilder final {
   TextureBuilder() noexcept = default;
   TextureBuilder& withSampler(const TextureSamplerDescriptor& sampler);
   TextureBuilder& withView(const TextureViewDescriptor& view);
+  TextureBuilder& withData(unsigned char* data);
   TextureBuilder& load(std::string_view path);
   TextureHandle build() const;
 
@@ -65,6 +66,7 @@ class TextureBuilder final {
   TextureSamplerDescriptor sampler_;
   TextureViewDescriptor view_;
   unsigned char* data_ = nullptr;
+  bool loaded_ = false;
 };
 
 }

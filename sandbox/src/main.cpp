@@ -39,8 +39,8 @@ class GameState : public sigma::SimpleState {
     sigma::MeshComponent mesh{m};
 
     auto shader = sigma::ShaderBuilder()
-        .loadModule("../assets/shaders/solid_color.vert", sigma::ShaderStage::VERTEX)
-        .loadModule("../assets/shaders/solid_color.frag", sigma::ShaderStage::FRAGMENT)
+        .loadModule("../assets/shaders/g_buffer.vert", sigma::ShaderStage::VERTEX)
+        .loadModule("../assets/shaders/g_buffer.frag", sigma::ShaderStage::FRAGMENT)
         .build();
 
     auto texture = sigma::TextureBuilder()
@@ -50,7 +50,7 @@ class GameState : public sigma::SimpleState {
     auto cube = world.createEntity();
     cube.addComponent<sigma::Transform>(glm::vec3(0.0f, 0.0f, 0.0f));
     cube.addComponent<sigma::MeshComponent>(mesh);
-    cube.addComponent<sigma::Material>(shader, texture);
+    cube.addComponent<sigma::PbrMaterial>(shader, texture);
 
     dispatcher_.start(state_data.world);
   }

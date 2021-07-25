@@ -43,6 +43,7 @@ class Shader final : public NonCopyable {
 
   void bind() const;
   void unbind() const;
+  void setInt(const char* name, int value) const;
   void setMat4(const char* name, const glm::mat4& value) const;
 
  private:

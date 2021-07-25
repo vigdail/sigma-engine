@@ -41,7 +41,7 @@ TextureBuilder& TextureBuilder::withView(const TextureViewDescriptor& view) {
 }
 
 TextureBuilder& TextureBuilder::load(std::string_view path) {
-  if (data_) {
+  if (loaded_ && data_) {
     stbi_image_free(data_);
   }
 
@@ -70,6 +70,8 @@ TextureBuilder& TextureBuilder::load(std::string_view path) {
     view_.internal_format = GL_RGBA;
   }
 
+  loaded_ = true;
+
   return *this;
 }
 
@@ -87,11 +89,21 @@ TextureHandle TextureBuilder::build() const {
   glTextureParameteri(texture->id_, GL_TEXTURE_WRAP_S, sampler_.wrap_s);
   glTextureParameteri(texture->id_, GL_TEXTURE_WRAP_T, sampler_.wrap_t);
 
-  if (data_) {
+  if (loaded_ && data_) {
     stbi_image_free(data_);
   }
 
   return texture;
+}
+
+TextureBuilder& TextureBuilder::withData(unsigned char* data) {
+  if (loaded_ && data_) {
+    stbi_image_free(data_);
+  }
+
+  data_ = data;
+
+  return *this;
 }
 
 }

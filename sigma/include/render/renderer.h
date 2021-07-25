@@ -13,9 +13,21 @@ struct MeshComponent {
   MeshHandle mesh;
 };
 
-struct Material {
+struct PbrMaterial {
   ShaderHandle shader;
-  TextureHandle diffuse;
+  TextureHandle albedo;
+  TextureHandle normalmap;
+  TextureHandle metalic;
+  TextureHandle rougness;
+  TextureHandle ao;
+  TextureHandle emission;
+};
+
+struct DummyTextures {
+  TextureHandle white;
+  TextureHandle black;
+  TextureHandle red;
+  TextureHandle normal;
 };
 
 class RenderSystem : public System {
@@ -26,6 +38,8 @@ class RenderSystem : public System {
     glEnable(GL_CULL_FACE);
     glEnable(GL_DEPTH_TEST);
 
+    createDummyTextures(world);
+
     auto window = world.raw().try_ctx<Window>();
     if (!window) {
       return;
@@ -34,7 +48,7 @@ class RenderSystem : public System {
     FrameBuffer::Descriptor descriptor{};
     descriptor.width = window->getWidth();
     descriptor.height = window->getHeight();
-    descriptor.color_formats = {GL_RGBA};
+    descriptor.color_formats = {GL_RGBA16F, GL_RGBA16F, GL_RGBA, GL_RGB};
     descriptor.depth_format = GL_DEPTH_COMPONENT16;
     frame_buffer_ = FrameBuffer(descriptor);
 
@@ -56,14 +70,21 @@ class RenderSystem : public System {
 
     const auto& camera = world.raw().get<Camera>(cameras[0]);
 
-    auto view = world.raw().view<MeshComponent, Transform, Material>();
+    auto view = world.raw().view<MeshComponent, Transform, PbrMaterial>();
     view.each([&](const auto& mesh, const auto& transform, const auto& material) {
       auto& shader = material.shader;
       shader->bind();
       shader->setMat4("view", camera.view);
-      shader->setMat4("proj", camera.projection);
+      shader->setMat4("projection", camera.projection);
       shader->setMat4("model", transform.transform());
-      material.diffuse->bind(0);
+      shader->setInt("albedo", 0);
+      shader->setInt("normalmap", 1);
+      shader->setInt("metalic", 2);
+      shader->setInt("rougness", 3);
+      shader->setInt("ao", 4);
+      shader->setInt("emissionmap", 5);
+
+      bindTextures(material, world);
 
       mesh.mesh->bind();
       if (mesh.mesh->isIndexed()) {
@@ -73,18 +94,105 @@ class RenderSystem : public System {
       }
     });
 
-    frame_buffer_.unbind();
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    screen_shader_->bind();
-    frame_buffer_.getTexture(0)->bind(0);
-    screen_quad_->bind();
-    glDrawElements(GL_TRIANGLES, screen_quad_->count(), GL_UNSIGNED_INT, nullptr);
+    drawScreenQuad();
   }
 
  private:
   FrameBuffer frame_buffer_;
   MeshHandle screen_quad_;
   ShaderHandle screen_shader_;
+
+ private:
+  void bindTextures(const PbrMaterial& material, const World& world) {
+    const auto& dummies = world.resource<DummyTextures>();
+    if (material.albedo) {
+      material.albedo->bind(0);
+    } else {
+      dummies.white->bind(0);
+    }
+    if (material.normalmap) {
+      material.normalmap->bind(1);
+    } else {
+      dummies.normal->bind(1);
+    }
+    if (material.metalic) {
+      material.metalic->bind(2);
+    } else {
+      dummies.red->bind(2);
+    }
+    if (material.rougness) {
+      material.rougness->bind(3);
+    } else {
+      dummies.red->bind(3);
+    }
+    if (material.ao) {
+      material.ao->bind(4);
+    } else {
+      dummies.red->bind(4);
+    }
+    if (material.emission) {
+      material.emission->bind(5);
+    } else {
+      dummies.black->bind(5);
+    }
+  }
+
+  void drawScreenQuad() {
+    frame_buffer_.unbind();
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    screen_shader_->bind();
+    frame_buffer_.getTexture(2)->bind(0);
+    screen_quad_->bind();
+    glDrawElements(GL_TRIANGLES, screen_quad_->count(), GL_UNSIGNED_INT, nullptr);
+  }
+
+  void createDummyTextures(World& world) {
+    DummyTextures dummies{};
+
+    TextureViewDescriptor view{};
+    view.width = 1;
+    view.height = 1;
+    view.internal_format = GL_RGB;
+    view.image_format = GL_RGB;
+    view.type = GL_UNSIGNED_BYTE;
+
+    unsigned char data[3] = {255, 255, 255};
+
+    TextureHandle white = TextureBuilder()
+        .withView(view)
+        .withData(data)
+        .build();
+    dummies.white = white;
+
+    data[0] = 0;
+    data[1] = 0;
+    data[2] = 0;
+    TextureHandle black = TextureBuilder()
+        .withView(view)
+        .withData(data)
+        .build();
+    dummies.black = black;
+
+    data[0] = 128;
+    data[1] = 128;
+    data[2] = 255;
+    TextureHandle normal = TextureBuilder()
+        .withView(view)
+        .withData(data)
+        .build();
+    dummies.normal = normal;
+
+    view.image_format = GL_RED;
+    view.internal_format = GL_RED;
+    unsigned char red_data[1] = {255};
+    TextureHandle red = TextureBuilder()
+        .withView(view)
+        .withData(red_data)
+        .build();
+    dummies.red = red;
+
+    world.addResource<DummyTextures>(dummies);
+  }
 };
 
 }  // namespace sigma
