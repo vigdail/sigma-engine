@@ -1,14 +1,27 @@
 #pragma once
 
 #include <glm/glm.hpp>
+#include <glm/gtx/quaternion.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
 namespace sigma {
 struct Transform {
-  int x;
-  int y;
-  int width;
-  int height;
+  glm::vec3 translation{};
+  glm::vec3 rotation{};
+  glm::vec3 scale{1.0f};
+
+  Transform() = default;
+  Transform(const Transform&) = default;
+
+  Transform(const glm::vec3& translation) : translation{translation} {}
+
+  glm::mat4 transform() const {
+    glm::mat4 rotation_matrix = glm::toMat4(glm::quat(rotation));
+
+    return glm::translate(glm::mat4(1.0f), translation)
+        * rotation_matrix
+        * glm::scale(glm::mat4(1.0f), scale);
+  }
 };
 
 struct Camera {

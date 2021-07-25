@@ -19,10 +19,12 @@ class RenderSystem : public System {
 
  public:
   void start(World& world) override {
+    glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+    glEnable(GL_CULL_FACE);
+    glEnable(GL_DEPTH_TEST);
   }
 
   void update(World& world) override {
-    glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     auto cameras = world.raw().view<Camera>();
@@ -38,13 +40,14 @@ class RenderSystem : public System {
       shader->bind();
       shader->setMat4("view", camera.view);
       shader->setMat4("proj", camera.projection);
-      glm::mat4 model(1.0f);
-      model = glm::translate(model, glm::vec3(transform.x, transform.y, 0.0f));
-      model = glm::scale(model, glm::vec3(transform.width, transform.height, 1.0f));
-      shader->setMat4("model", model);
+      shader->setMat4("model", transform.transform());
 
       mesh.mesh->bind();
-      glDrawElements((GLenum)mesh.mesh->getTopology(), mesh.mesh->count(), GL_UNSIGNED_INT, nullptr);
+      if (mesh.mesh->isIndexed()) {
+        glDrawElements((GLenum)mesh.mesh->getTopology(), mesh.mesh->count(), GL_UNSIGNED_INT, nullptr);
+      } else {
+        glDrawArrays((GLenum)mesh.mesh->getTopology(), 0, mesh.mesh->count());
+      }
     });
   }
 
