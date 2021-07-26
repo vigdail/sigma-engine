@@ -49,6 +49,10 @@ struct Camera {
     recalculateView();
   }
 
+  const glm::vec3& getPosition() const {
+    return position;
+  }
+
   void setLookTarget(glm::vec3 target_position) {
     target = target_position;
     recalculateView();

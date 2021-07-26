@@ -94,4 +94,16 @@ void FrameBuffer::unbind() const {
   glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
+void FrameBuffer::bindRead() const {
+  glBindFramebuffer(GL_READ_FRAMEBUFFER, id_);
+}
+
+int FrameBuffer::getWidth() const {
+  return descriptor_.width;
+}
+
+int FrameBuffer::getHeight() const {
+  return descriptor_.height;
+}
+
 }

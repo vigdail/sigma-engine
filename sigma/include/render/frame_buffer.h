@@ -28,9 +28,11 @@ class FrameBuffer {
 
   TextureHandle getDepth() { return depth_attachment_; }
 
- public:
   void bind() const;
   void unbind() const;
+  void bindRead() const;
+  int getWidth() const;
+  int getHeight() const;
 
  protected:
   uint32_t id_{};

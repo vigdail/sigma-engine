@@ -1,6 +1,7 @@
 
 #pragma once
 
+#include <components/point_light.h>
 #include "core/system.h"
 #include "mesh.h"
 #include "mesh_factory.h"
@@ -33,7 +34,7 @@ class RenderSystem : public System {
 
  public:
   void start(World& world) override {
-    glClearColor(0.1f, 0.2f, 0.3f, 1.0f);
+    glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
     glEnable(GL_CULL_FACE);
     glEnable(GL_DEPTH_TEST);
 
@@ -48,7 +49,7 @@ class RenderSystem : public System {
     descriptor.width = window->getWidth();
     descriptor.height = window->getHeight();
     descriptor.color_formats = {GL_RGBA16F, GL_RGBA16F, GL_RGBA, GL_RGB};
-    descriptor.depth_format = GL_DEPTH_COMPONENT16;
+    descriptor.depth_format = GL_DEPTH24_STENCIL8;
     frame_buffer_ = FrameBuffer(descriptor);
 
     g_buffer_shader_ = ShaderBuilder()
@@ -67,6 +68,16 @@ class RenderSystem : public System {
     screen_shader_ = ShaderBuilder()
         .loadModule("../assets/shaders/screen.vert", ShaderStage::VERTEX)
         .loadModule("../assets/shaders/screen.frag", ShaderStage::FRAGMENT)
+        .build();
+
+    pointlight_shader_ = ShaderBuilder()
+        .loadModule("../assets/shaders/point_light.vert", ShaderStage::VERTEX)
+        .loadModule("../assets/shaders/point_light.frag", ShaderStage::FRAGMENT)
+        .build();
+
+    light_shader_ = ShaderBuilder()
+        .loadModule("../assets/shaders/light.vert", ShaderStage::VERTEX)
+        .loadModule("../assets/shaders/light.frag", ShaderStage::FRAGMENT)
         .build();
   }
 
@@ -93,14 +104,14 @@ class RenderSystem : public System {
 
       mesh.mesh->bind();
       if (mesh.mesh->isIndexed()) {
-        glDrawElements((GLenum) mesh.mesh->getTopology(), mesh.mesh->count(), GL_UNSIGNED_INT, nullptr);
+        glDrawElements((GLenum)mesh.mesh->getTopology(), mesh.mesh->count(), GL_UNSIGNED_INT, nullptr);
       } else {
-        glDrawArrays((GLenum) mesh.mesh->getTopology(), 0, mesh.mesh->count());
+        glDrawArrays((GLenum)mesh.mesh->getTopology(), 0, mesh.mesh->count());
       }
     });
 
     frame_buffer_.unbind();
-    drawScreenQuad();
+    drawScreenQuad(world, camera);
   }
 
  private:
@@ -108,6 +119,8 @@ class RenderSystem : public System {
   MeshHandle screen_quad_;
   ShaderHandle g_buffer_shader_;
   ShaderHandle screen_shader_;
+  ShaderHandle pointlight_shader_;
+  ShaderHandle light_shader_;
 
  private:
   void bindTextures(const PbrMaterial& material, const World& world) {
@@ -144,12 +157,63 @@ class RenderSystem : public System {
     }
   }
 
-  void drawScreenQuad() {
+  void drawScreenQuad(World& world, const Camera& camera) {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    screen_shader_->bind();
-    frame_buffer_.getTexture(2)->bind(0);
-    screen_quad_->bind();
-    glDrawElements(GL_TRIANGLES, screen_quad_->count(), GL_UNSIGNED_INT, nullptr);
+
+    auto width = frame_buffer_.getWidth();
+    auto height = frame_buffer_.getHeight();
+    frame_buffer_.bindRead();
+    glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
+    glBlitFramebuffer(0, 0, width, height,
+                      0, 0, width, height,
+                      GL_DEPTH_BUFFER_BIT, GL_NEAREST);
+
+    glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
+    glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+    pointlight_shader_->bind();
+    pointlight_shader_->setVec3("camera_position", camera.getPosition());
+    pointlight_shader_->setInt("position_metal", 0);
+    pointlight_shader_->setInt("normal_roughness", 1);
+    pointlight_shader_->setInt("albedo_ao", 2);
+    pointlight_shader_->setInt("emission", 3);
+    frame_buffer_.getTexture(0)->bind(0);
+    frame_buffer_.getTexture(1)->bind(1);
+    frame_buffer_.getTexture(2)->bind(2);
+    frame_buffer_.getTexture(3)->bind(3);
+
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_ONE, GL_ONE);
+    glDepthMask(GL_FALSE);
+
+    auto view = world.raw().view<PointLight, Transform, MeshComponent>();
+    view.each([&](const auto& light, const auto& transform, const auto&) {
+      pointlight_shader_->setVec3("light_position", transform.translation);
+      pointlight_shader_->setVec3("light_color", light.color);
+      pointlight_shader_->setFloat("light_radius", light.radius);
+      pointlight_shader_->setFloat("light_intensity", light.intensity);
+
+      screen_quad_->bind();
+      glDrawElements(GL_TRIANGLES, screen_quad_->count(), GL_UNSIGNED_INT, nullptr);
+    });
+
+    light_shader_->bind();
+    light_shader_->setMat4("view", camera.view);
+    light_shader_->setMat4("projection", camera.projection);
+
+    glDisable(GL_BLEND);
+    glDepthMask(GL_TRUE);
+
+    view.each([&](const auto& light, const auto& transform, const auto& mesh_component) {
+      light_shader_->setMat4("model", transform.transform());
+      light_shader_->setVec3("color", light.color);
+      const auto& mesh = mesh_component.mesh;
+
+      mesh->bind();
+      glDrawElements(GL_TRIANGLES, mesh->count(), GL_UNSIGNED_INT, nullptr);
+    });
+
   }
 
   void createDummyTextures(World& world) {

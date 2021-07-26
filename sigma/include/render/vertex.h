@@ -25,6 +25,7 @@ struct BufferLayout {
 struct SimpleVertex {
   glm::vec3 position;
   glm::vec2 uv;
+  glm::vec3 normal;
 
   static BufferLayout getLayout() {
     VertexAttribute position_attr{};
@@ -37,10 +38,15 @@ struct SimpleVertex {
     uv_attr.offset = offsetof(SimpleVertex, uv);
     uv_attr.location = 1;
     uv_attr.normalized = false;
+    VertexAttribute normal_attr{};
+    normal_attr.count = 3;
+    normal_attr.offset = offsetof(SimpleVertex, normal);
+    normal_attr.location = 2;
+    normal_attr.normalized = false;
 
     BufferLayout layout{};
     layout.stride = sizeof(SimpleVertex);
-    layout.attributes = {position_attr, uv_attr};
+    layout.attributes = {position_attr, uv_attr, normal_attr};
 
     return layout;
   }

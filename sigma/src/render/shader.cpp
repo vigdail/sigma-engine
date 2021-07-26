@@ -40,7 +40,7 @@ void ShaderModule::checkCompileErrors() {
     glGetShaderInfoLog(id_, max_log_size, nullptr,
                        static_cast<char*>(info_log));
     std::cerr << "ShaderModule compilation error: " << id_ << " " << info_log
-        << '\n';
+              << '\n';
   }
 }
 
@@ -96,6 +96,14 @@ void Shader::setMat4(const char* name, const glm::mat4& value) const {
 
 void Shader::setInt(const char* name, int value) const {
   glUniform1i(glGetUniformLocation(id_, name), value);
+}
+
+void Shader::setVec3(const char* name, const glm::vec3& value) const {
+  glUniform3f(glGetUniformLocation(id_, name), value.x, value.y, value.z);
+}
+
+void Shader::setFloat(const char* name, float value) const {
+  glUniform1f(glGetUniformLocation(id_, name), value);
 }
 
 ShaderBuilder& ShaderBuilder::loadModule(const std::filesystem::path& path,

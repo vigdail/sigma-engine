@@ -20,8 +20,9 @@ layout(location = 3) out vec3 emission;
 
 void main() {
     position_metal.rgb = position;
+    //    position_metal.g = 1.0f - position_metal.g;
     position_metal.a = texture(metallic, uv).r;
-    normal_roughness.rgb = texture(normalmap, uv).rgb;
+    normal_roughness.rgb = normalize(normal);// texture(normalmap, uv).rgb;
     normal_roughness.a = texture(roughness, uv).r;
     albedo_ao.rgb = texture(albedo, uv).rgb;
     albedo_ao.a = texture(ao, uv).a;
