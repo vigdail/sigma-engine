@@ -14,7 +14,6 @@ struct MeshComponent {
 };
 
 struct PbrMaterial {
-  ShaderHandle shader;
   TextureHandle albedo;
   TextureHandle normalmap;
   TextureHandle metallic;
@@ -52,6 +51,18 @@ class RenderSystem : public System {
     descriptor.depth_format = GL_DEPTH_COMPONENT16;
     frame_buffer_ = FrameBuffer(descriptor);
 
+    g_buffer_shader_ = ShaderBuilder()
+        .loadModule("../assets/shaders/g_buffer.vert", sigma::ShaderStage::VERTEX)
+        .loadModule("../assets/shaders/g_buffer.frag", sigma::ShaderStage::FRAGMENT)
+        .build();
+
+    g_buffer_shader_->setInt("albedo", 0);
+    g_buffer_shader_->setInt("normalmap", 1);
+    g_buffer_shader_->setInt("metallic", 2);
+    g_buffer_shader_->setInt("roughness", 3);
+    g_buffer_shader_->setInt("ao", 4);
+    g_buffer_shader_->setInt("emissionmap", 5);
+
     screen_quad_ = MeshFactory::createQuad();
     screen_shader_ = ShaderBuilder()
         .loadModule("../assets/shaders/screen.vert", ShaderStage::VERTEX)
@@ -64,7 +75,7 @@ class RenderSystem : public System {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     auto cameras = world.raw().view<Camera>();
-    if (cameras.size() < 1) {
+    if (cameras.empty()) {
       return;
     }
 
@@ -72,34 +83,30 @@ class RenderSystem : public System {
 
     auto view = world.raw().view<MeshComponent, Transform, PbrMaterial>();
     view.each([&](const auto& mesh, const auto& transform, const auto& material) {
-      auto& shader = material.shader;
+      auto& shader = g_buffer_shader_;
       shader->bind();
       shader->setMat4("view", camera.view);
       shader->setMat4("projection", camera.projection);
       shader->setMat4("model", transform.transform());
-      shader->setInt("albedo", 0);
-      shader->setInt("normalmap", 1);
-      shader->setInt("metallic", 2);
-      shader->setInt("roughness", 3);
-      shader->setInt("ao", 4);
-      shader->setInt("emissionmap", 5);
 
       bindTextures(material, world);
 
       mesh.mesh->bind();
       if (mesh.mesh->isIndexed()) {
-        glDrawElements((GLenum)mesh.mesh->getTopology(), mesh.mesh->count(), GL_UNSIGNED_INT, nullptr);
+        glDrawElements((GLenum) mesh.mesh->getTopology(), mesh.mesh->count(), GL_UNSIGNED_INT, nullptr);
       } else {
-        glDrawArrays((GLenum)mesh.mesh->getTopology(), 0, mesh.mesh->count());
+        glDrawArrays((GLenum) mesh.mesh->getTopology(), 0, mesh.mesh->count());
       }
     });
 
+    frame_buffer_.unbind();
     drawScreenQuad();
   }
 
  private:
   FrameBuffer frame_buffer_;
   MeshHandle screen_quad_;
+  ShaderHandle g_buffer_shader_;
   ShaderHandle screen_shader_;
 
  private:
@@ -138,7 +145,6 @@ class RenderSystem : public System {
   }
 
   void drawScreenQuad() {
-    frame_buffer_.unbind();
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     screen_shader_->bind();
     frame_buffer_.getTexture(2)->bind(0);
