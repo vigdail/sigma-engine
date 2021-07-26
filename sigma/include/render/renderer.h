@@ -17,8 +17,8 @@ struct PbrMaterial {
   ShaderHandle shader;
   TextureHandle albedo;
   TextureHandle normalmap;
-  TextureHandle metalic;
-  TextureHandle rougness;
+  TextureHandle metallic;
+  TextureHandle roughness;
   TextureHandle ao;
   TextureHandle emission;
 };
@@ -79,8 +79,8 @@ class RenderSystem : public System {
       shader->setMat4("model", transform.transform());
       shader->setInt("albedo", 0);
       shader->setInt("normalmap", 1);
-      shader->setInt("metalic", 2);
-      shader->setInt("rougness", 3);
+      shader->setInt("metallic", 2);
+      shader->setInt("roughness", 3);
       shader->setInt("ao", 4);
       shader->setInt("emissionmap", 5);
 
@@ -115,13 +115,13 @@ class RenderSystem : public System {
     } else {
       dummies.normal->bind(1);
     }
-    if (material.metalic) {
-      material.metalic->bind(2);
+    if (material.metallic) {
+      material.metallic->bind(2);
     } else {
       dummies.red->bind(2);
     }
-    if (material.rougness) {
-      material.rougness->bind(3);
+    if (material.roughness) {
+      material.roughness->bind(3);
     } else {
       dummies.red->bind(3);
     }
