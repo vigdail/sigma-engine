@@ -2,6 +2,7 @@
 
 namespace sigma {
 
+// TODO
 void Input::update() {
   for (auto& key : key_states_) {
     cycleKeyState(key.second);

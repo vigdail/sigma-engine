@@ -5,6 +5,7 @@
 #include <core/components.h>
 #include <render/renderer.h>
 #include <components/point_light.h>
+#include <core/time_system.h>
 
 struct Moving {
   bool data;
@@ -13,18 +14,102 @@ struct Moving {
 class MoveSystem : public sigma::System {
  public:
   void update(sigma::World& world) override {
-    auto time = glfwGetTime();
-    auto dt = time - last_time_;
-    last_time_ = time;
+    auto time = world.resource<sigma::Time>();
+    auto current_time = time.time;
+    auto dt = time.delta_time;
     world.raw().view<sigma::Transform, Moving>().each([&](auto& transform, auto& m) {
-      transform.translation.x = 2.5f * sin(time);
+      transform.translation.x = 2.5f * sin(current_time);
       transform.rotation.x += 1.0f * dt;
       transform.rotation.y += 0.5f * dt;
     });
   }
+};
+
+class CameraSystem : public sigma::System {
+ public:
+  void update(sigma::World& world) override {
+    handleMouse(world);
+    handleKeyboard(world);
+
+    float dt = world.resource<sigma::Time>().delta_time;
+
+    glm::vec3 disp{0.0f};
+    if (glm::length(dir_) > glm::epsilon<float>()) {
+      disp = glm::normalize(dir_) * speed_;
+    }
+
+    world.raw().view<sigma::Camera>().each([&](auto& camera) {
+      camera.addYaw(dx_ * sensitivity_ * dt);
+      camera.addPitch(-dy_ * sensitivity_ * dt);
+
+      const auto& last_pos = camera.getPosition();
+      camera.translate(disp * dt);
+    });
+  }
 
  private:
-  double last_time_ = 0.0f;
+  bool is_first_{true};
+  float last_x_{0.0f};
+  float last_y_{0.0f};
+  float sensitivity_{5.0f};
+  float speed_{15.0f};
+  float dx_{0.0f};
+  float dy_{0.0f};
+  glm::vec3 dir_;
+
+ private:
+  void handleMouse(sigma::World& world) {
+    dx_ = 0.0f;
+    dy_ = 0.0f;
+
+    const auto& bus = world.resource<sigma::EventBus<sigma::Event>>();
+
+    for (auto& e: bus.events) {
+      std::visit(sigma::overloaded{
+          [&](sigma::input_event::InputEvent ev) {
+            std::visit(sigma::overloaded{
+                           [&](sigma::input_event::MouseMoved event) { onMouseMoved(world, event); },
+                           [](auto) {},
+                       },
+                       ev);
+          },
+          [](auto) {},
+      }, e);
+    }
+  }
+
+  void handleKeyboard(sigma::World& world) {
+    auto input = world.resource<sigma::Input>();
+
+    glm::vec3 dir{0.0f};
+    if (input.getKeyState(sigma::KeyCode::W) == sigma::KeyState::PRESSED) {
+      dir.z += 1.0f;
+    }
+    if (input.getKeyState(sigma::KeyCode::S) == sigma::KeyState::PRESSED) {
+      dir.z -= 1.0f;
+    }
+    if (input.getKeyState(sigma::KeyCode::A) == sigma::KeyState::PRESSED) {
+      dir.x -= 1.0f;
+    }
+    if (input.getKeyState(sigma::KeyCode::D) == sigma::KeyState::PRESSED) {
+      dir.x += 1.0f;
+    }
+
+    dir_ = dir;
+  }
+
+  void onMouseMoved(sigma::World& world, const sigma::input_event::MouseMoved& event) {
+    if (is_first_) {
+      is_first_ = false;
+      last_x_ = event.x;
+      last_y_ = event.y;
+    }
+    dx_ = event.x - last_x_;
+    dy_ = event.y - last_y_;
+
+    last_x_ = event.x;
+    last_y_ = event.y;
+  }
 };
 
 class GameState : public sigma::SimpleState {
@@ -92,9 +177,11 @@ struct LoadingState : public sigma::SimpleState {
 int main() {
   auto data = sigma::GameDataBuilder()
       .withSystem(std::make_shared<sigma::WindowSystem>(sigma::WindowConfig{960, 540}))
+      .withSystem(std::make_shared<sigma::TimeSystem>())
       .withSystem(std::make_shared<sigma::InputSystem>())
       .withSystem(std::make_shared<sigma::RenderSystem>())
-      .withSystem(std::make_shared<MoveSystem>());
+      .withSystem(std::make_shared<MoveSystem>())
+      .withSystem(std::make_shared<CameraSystem>());
   sigma::Application app(std::make_shared<LoadingState>(), data);
   app.run();
 }

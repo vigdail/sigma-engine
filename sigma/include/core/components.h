@@ -31,7 +31,7 @@ struct Camera {
   static Camera perspective(float fov, float aspect, float near, float far) {
     Camera camera{};
     camera.projection = glm::perspective(fov, aspect, near, far);
-    camera.recalculateView();
+    camera.updateVectors();
 
     return camera;
   }
@@ -39,7 +39,7 @@ struct Camera {
   static Camera ortho(float width, float height, float near, float far) {
     Camera camera{};
     camera.projection = glm::ortho(0.0f, width, height, 0.0f, near, far);
-    camera.recalculateView();
+    camera.updateVectors();
 
     return camera;
   }
@@ -49,22 +49,56 @@ struct Camera {
     recalculateView();
   }
 
+  void translate(const glm::vec3& vec) {
+    position += right * vec.x;
+    position += front * vec.z;
+    recalculateView();
+  }
+
   const glm::vec3& getPosition() const {
     return position;
   }
 
-  void setLookTarget(glm::vec3 target_position) {
-    target = target_position;
-    recalculateView();
+  void addPitch(float delta) {
+    pitch += delta;
+    if (pitch > 89.0f) {
+      pitch = 89.0f;
+    }
+    if (pitch < -89.0f) {
+      pitch = -89.0f;
+    }
+    updateVectors();
+  }
+
+  void addYaw(float delta) {
+    yaw += delta;
+    updateVectors();
   }
 
  private:
   glm::vec3 position{glm::vec3(0.0f)};
-  glm::vec3 target{glm::vec3(0.0f)};
+  glm::vec3 up{0.0f, 1.0f, 0.0f};
+  glm::vec3 front{0.0f, 0.0f, -1.0f};
+  glm::vec3 right{1.0f, 0.0f, 0.0};
+  float yaw{-90.0f};
+  float pitch{0.0f};
 
  private:
   void recalculateView() {
-    view = glm::lookAt(position, target, glm::vec3(0.0f, 1.0f, 0.0f));
+    view = glm::lookAt(position, position + front, up);
+  }
+
+  void updateVectors() {
+    glm::vec3 f;
+    f.x = cos(glm::radians(yaw)) * cos(glm::radians(pitch));
+    f.y = sin(glm::radians(pitch));
+    f.z = sin(glm::radians(yaw)) * cos(glm::radians(pitch));
+
+    front = glm::normalize(f);
+    right = glm::cross(front, glm::vec3(0.0f, 1.0f, 0.0f));
+    up = glm::cross(right, front);
+
+    recalculateView();
   }
 };
 }
