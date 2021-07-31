@@ -99,7 +99,12 @@ class RenderSystem : public System {
       shader->setMat4("view", camera.view);
       shader->setMat4("projection", camera.projection);
       shader->setMat4("model", transform.transform());
-
+      shader->setInt("albedo", 0);
+      shader->setInt("normalmap", 1);
+      shader->setInt("metallic", 2);
+      shader->setInt("roughness", 3);
+      shader->setInt("ao", 4);
+      shader->setInt("emissionmap", 5);
       bindTextures(material, world);
 
       mesh.mesh->bind();

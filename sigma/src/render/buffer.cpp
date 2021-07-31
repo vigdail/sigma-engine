@@ -2,12 +2,13 @@
 
 namespace sigma {
 
-Buffer::Buffer(BufferType type, std::size_t size, BufferUsage usage) noexcept: size_{size}, type_{type}, usage_{usage} {
+Buffer::Buffer(BufferType type, std::size_t size, BufferUsage usage) noexcept
+    : size_{size}, type_{type}, usage_{usage} {
   glCreateBuffers(1, &id_);
 }
 
-Buffer::Buffer(BufferType type, const uint8_t* data, std::size_t size, BufferUsage usage) noexcept: Buffer{type, size,
-                                                                                                           usage} {
+Buffer::Buffer(BufferType type, const uint8_t* data, std::size_t size, BufferUsage usage) noexcept
+    : Buffer{type, size, usage} {
   glBindBuffer((GLenum)type_, id_);
   glBufferData((GLenum)type_, size, data, (GLenum)usage_);
 }

@@ -138,7 +138,6 @@ class CameraSystem : public sigma::System {
 
 class GameState : public sigma::SimpleState {
  public:
-
   void onStart(sigma::StateData state_data) override {
     std::cout << "[LOG] Game start" << std::endl;
 
@@ -162,29 +161,36 @@ class GameState : public sigma::SimpleState {
     cube.addComponent<sigma::PbrMaterial>(texture);
     cube.addComponent<Moving>();
 
-    sigma::Transform light_transform(glm::vec3(-2.0f, 0.0f, 3.0f));
+    sigma::Transform tr;
+    tr.translation = glm::vec3(0.0f, -2.0f, 0.0f);
+    tr.scale = glm::vec3(100.0f, 0.1f, 100.0f);
+    auto floor = world.createEntity();
+    floor.addComponent<sigma::Transform>(tr);
+    floor.addComponent<sigma::MeshComponent>(mesh);
+    floor.addComponent<sigma::PbrMaterial>();
+
+    tr.translation = glm::vec3(0.0f, -2.0f, 0.0f);
+    tr.rotation = glm::vec3(glm::radians(90.0f), 0.0f, 0.0f);
+    tr.scale = glm::vec3(100.0f, 0.1f, 100.0f);
+    auto wall = world.createEntity();
+    wall.addComponent<sigma::Transform>(tr);
+    wall.addComponent<sigma::MeshComponent>(mesh);
+    wall.addComponent<sigma::PbrMaterial>();
+
+    sigma::Transform light_transform(glm::vec3(-2.0f, 0.0f, 4.0f));
     light_transform.scale = glm::vec3(0.3f);
     auto light = world.createEntity();
     light.addComponent<sigma::Transform>(light_transform);
     light.addComponent<sigma::MeshComponent>(mesh);
-    light.addComponent<sigma::PointLight>(glm::vec3(0.5f));
+    light.addComponent<sigma::PointLight>(glm::vec3(0.0f, 0.0f, 1.0f), 5.0f, 10.0f);
 
-    light_transform.translation = glm::vec3(0.0f, 2.0f, 5.0f);
+    light_transform.translation = glm::vec3(2.0f, 0.0f, 4.0f);
     auto light_2 = world.createEntity();
     light_2.addComponent<sigma::Transform>(light_transform);
     light_2.addComponent<sigma::MeshComponent>(mesh);
-    light_2.addComponent<sigma::PointLight>(glm::vec3(1.0f, 0.0f, 0.0f));
-
-    dispatcher_.start(state_data.world);
+    light_2.addComponent<sigma::PointLight>(glm::vec3(1.0f, 0.0f, 0.0f), 5.0f, 10.0f);
   }
 
-  sigma::Transition update(sigma::StateData state_data) override {
-    dispatcher_.update(state_data.world);
-    return sigma::transition::None();
-  }
-
- private:
-  sigma::Dispatcher dispatcher_;
 };
 
 struct LoadingState : public sigma::SimpleState {
