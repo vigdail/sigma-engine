@@ -82,7 +82,7 @@ void Window::setupCallbacks() {
                      [](GLFWwindow* const window, int const key, int const scancode, int const action, int const mods) {
                        auto self = static_cast<Window*>(glfwGetWindowUserPointer(window));
 
-                       input_event::InputEvent event;
+                       Event event;
                        if (action == GLFW_PRESS) {
                          event = input_event::KeyPressed{static_cast<KeyCode>(key)};
                        } else if (action == GLFW_RELEASE) {
@@ -108,7 +108,7 @@ void Window::setupCallbacks() {
 
   glfwSetMouseButtonCallback(window_, [](GLFWwindow *window, int button, int action, int mode) {
     auto self = static_cast<Window*>(glfwGetWindowUserPointer(window));
-    input_event::InputEvent event;
+    Event event;
     if (action == GLFW_PRESS) {
       event = input_event::MouseButtonPressed{static_cast<MouseButton>(button)};
     } else if (action == GLFW_RELEASE) {

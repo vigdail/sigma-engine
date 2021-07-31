@@ -34,25 +34,16 @@ class Application {
       data_.update(world_);
       states_.update(StateData(world_, data_));
 
-      auto& events = world_.resource<EventBus<Event>>().events;
-
-      for (Event e : events) {
-        states_.handleEvent(StateData(world_, data_), e);
-      }
-      events.clear();
+      world_.clearEvents();
     }
 
     std::cout << "[LOG] Application shutdown" << std::endl;
-  }
-  World& getWorld() {
-    return world_;
   }
 
  private:
   World world_;
   GameData data_;
   StateMachine states_;
-  std::vector<Event> events_;
 };
 
 }  // namespace sigma

@@ -14,6 +14,7 @@ namespace sigma {
 struct StateData {
   World& world;
   GameData& data;
+
   StateData(World& world, GameData& data) : world(world), data(data) {
   }
 };
@@ -33,49 +34,42 @@ struct Quit {};
 }// namespace transition
 
 using Transition =
-    std::variant<transition::None, transition::Pop, transition::Push, transition::Switch, transition::Quit>;
+std::variant<transition::None, transition::Pop, transition::Push, transition::Switch, transition::Quit>;
 
 class State {
  public:
   State() {
   }
+
   virtual ~State() = default;
+
   virtual void onStart(StateData data) {
   }
+
   virtual void onStop(StateData data) {
   }
+
   virtual void onPause(StateData data) {
   }
+
   virtual void onResume(StateData data) {
   }
+
   virtual Transition update(StateData data) {
+    const auto& events = data.world.resource<EventBus<window_event::CloseRequested>>().events;
+    if (!events.empty()) {
+      return transition::Quit();
+    }
+
+    const auto& destroyed_events = data.world.resource<EventBus<window_event::Destroyed>>().events;
+    if (!destroyed_events.empty()) {
+      return transition::Quit();
+    }
     return transition::None();
   }
+
   virtual Transition fixedUpdate(StateData data) {
     return transition::None();
-  }
-  virtual Transition handleEvent(StateData data, Event event) {
-    return transition::None();
-  }
-};
-
-class SimpleState : public State {
- public:
-  Transition handleEvent(StateData, Event event) override {
-    Transition trans = transition::None();
-    std::visit(overloaded{
-                   [&trans](const window_event::WindowEvent& e) {
-                     std::visit(overloaded{
-                                    [&trans](const window_event::CloseRequested&) { trans = transition::Quit(); },
-                                    [&trans](const window_event::Destroyed&) { trans = transition::Quit(); },
-                                    [](const auto& e) {},
-                                },
-                                e);
-                   },
-                   [](const auto& e) {},
-               },
-               event);
-    return trans;
   }
 };
 
@@ -85,6 +79,7 @@ class StateMachine {
     running_ = false;
     states_ = {state};
   }
+
   bool running() {
     return running_;
   }
@@ -108,6 +103,7 @@ class StateMachine {
 
     transit(transition, data);
   }
+
   void update(StateData data) {
     if (!running_) {
       return;
@@ -115,17 +111,6 @@ class StateMachine {
 
     Ref<State> state = states_.back();
     Transition transition = state->update(data);
-
-    transit(transition, data);
-  }
-
-  void handleEvent(StateData data, Event event) {
-    if (!running_) {
-      return;
-    }
-
-    Ref<State> state = states_.back();
-    Transition transition = state->handleEvent(data, event);
 
     transit(transition, data);
   }

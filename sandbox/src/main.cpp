@@ -14,23 +14,12 @@ struct Moving {
 class CursorHideSystem : public sigma::System {
  public:
   void update(sigma::World& world) override {
-    const auto& events = world.resource<sigma::EventBus<sigma::Event>>().events;
+    const auto& events = world.eventBus<sigma::input_event::KeyPressed>().events;
     for (const auto& event: events) {
-      std::visit(sigma::overloaded{
-          [&](sigma::input_event::InputEvent ev) {
-            std::visit(sigma::overloaded{
-                           [&](sigma::input_event::KeyPressed event) {
-                             if (event.key == sigma::KeyCode::SPACE) {
-                               auto& window = world.resource<sigma::Window>();
-                               window.toggleCursor();
-                             }
-                           },
-                           [](auto) {},
-                       },
-                       ev);
-          },
-          [](auto) {},
-      }, event);
+      if (event.key == sigma::KeyCode::SPACE) {
+        auto& window = world.resource<sigma::Window>();
+        window.toggleCursor();
+      }
     }
   }
 };
@@ -86,19 +75,9 @@ class CameraSystem : public sigma::System {
     dx_ = 0.0f;
     dy_ = 0.0f;
 
-    const auto& bus = world.resource<sigma::EventBus<sigma::Event>>();
-
+    const auto& bus = world.eventBus<sigma::input_event::MouseMoved>();
     for (auto& e: bus.events) {
-      std::visit(sigma::overloaded{
-          [&](sigma::input_event::InputEvent ev) {
-            std::visit(sigma::overloaded{
-                           [&](sigma::input_event::MouseMoved event) { onMouseMoved(world, event); },
-                           [](auto) {},
-                       },
-                       ev);
-          },
-          [](auto) {},
-      }, e);
+      onMouseMoved(world, e);
     }
   }
 
@@ -136,7 +115,7 @@ class CameraSystem : public sigma::System {
   }
 };
 
-class GameState : public sigma::SimpleState {
+class GameState : public sigma::State {
  public:
   void onStart(sigma::StateData state_data) override {
     std::cout << "[LOG] Game start" << std::endl;
@@ -193,7 +172,7 @@ class GameState : public sigma::SimpleState {
 
 };
 
-struct LoadingState : public sigma::SimpleState {
+struct LoadingState : public sigma::State {
  public:
   void onStart(sigma::StateData state_data) override {
     std::cout << "[LOG] Loading start" << std::endl;

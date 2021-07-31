@@ -20,8 +20,8 @@ enum class KeyState {
 
 class Input {
  public:
-  Input() : key_states_(), mouse_button_states_(), mouse_position_(glm::vec2(0.0f)) {
-  }
+  Input() : key_states_(), mouse_button_states_(), mouse_position_(glm::vec2(0.0f)) {}
+
   virtual ~Input() = default;
 
   void update();
@@ -52,31 +52,34 @@ class InputSystem : public System {
   }
 
   void update(World& world) override {
-    auto& bus = world.resource<sigma::EventBus<sigma::Event>>();
-
-    for (auto& e : bus.events) {
-      std::visit(overloaded{
-                     [&](sigma::input_event::InputEvent ev) { onEvent(world, ev); },
-                     [](auto) {},
-                 },
-                 e);
-    }
+    auto& input = world.resource<Input>();
+    onEvent<input_event::KeyPressed>(world, [&](const auto& e) {
+      input.onKeyPressed(e.key);
+    });
+    onEvent<input_event::KeyReleased>(world, [&](const auto& e) {
+      input.onKeyReleased(e.key);
+    });
+    onEvent<input_event::MouseButtonPressed>(world, [&](const auto& e) {
+      input.onMouseButtonPressed(e.button);
+    });
+    onEvent<input_event::MouseButtonReleased>(world, [&](const auto& e) {
+      input.onMouseButtonReleased(e.button);
+    });
+    onEvent<input_event::MouseMoved>(world, [&](const auto& e) {
+      input.onMouseMoved(e.x, e.y);
+    });
+    onEvent<input_event::MouseWheelMoved>(world, [&](const auto& e) {
+      // TODO
+    });
   }
 
  private:
-  void onEvent(World& world, input_event::InputEvent event) {
-    auto& input = world.resource<Input>();
-    std::visit(overloaded{
-                   [&](sigma::input_event::KeyPressed e) { input.onKeyPressed(e.key); },
-                   [&](sigma::input_event::KeyReleased e) { input.onKeyReleased(e.key); },
-                   [&](sigma::input_event::MouseButtonPressed e) { input.onMouseButtonPressed(e.button); },
-                   [&](sigma::input_event::MouseButtonReleased e) { input.onMouseButtonReleased(e.button); },
-                   [&](sigma::input_event::MouseMoved e) { input.onMouseMoved(e.x, e.y); },
-                   [&](sigma::input_event::MouseWheelMoved e) { /* @TODO */ },
-                   [](auto) {},
-               },
-               event);
-  }
+  template<typename T>
+  void onEvent(World& world, std::function<void(const T&)> f) {
+    for (const auto& e: world.eventBus<T>().events) {
+      f(e);
+    }
+  };
 };
 
 }  // namespace sigma
