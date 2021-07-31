@@ -23,16 +23,21 @@ class Window {
   ~Window();
   std::vector<Event> pollEvents();
   void swapBuffers() const;
+
   int getWidth() const {
     return width_;
   }
+
   int getHeight() const {
     return height_;
   }
+
   void setTitle(std::string title) const;
+
   bool shouldClose() const {
     return glfwWindowShouldClose(window_);
   }
+
   void hideCursor();
   void showCursor();
   void toggleCursor();
@@ -60,15 +65,18 @@ class WindowSystem : public System {
  public:
   explicit WindowSystem(WindowConfig config) : config_(config) {
   }
+
   void start(World& world) override {
     world.addResource<Window>(config_.width, config_.height);
+    world.addResource<EventBus<Event>>();
   }
 
   void update(World& world) override {
     auto& window = world.resource<Window>();
     window.swapBuffers();
 
-    world.addResource<EventBus<Event>>(std::move(window.pollEvents()));
+    auto& events = world.resource<EventBus<Event>>();
+    events.events = std::move(window.pollEvents());
   }
 
  private:
