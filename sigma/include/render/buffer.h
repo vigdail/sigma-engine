@@ -27,7 +27,7 @@ enum class BufferUsage {
 class Buffer final : public NonCopyable {
  public:
   Buffer(BufferType type, std::size_t size, BufferUsage usage) noexcept;
-  Buffer(BufferType type, const void* data, std::size_t size, BufferUsage usage = BufferUsage::STATIC_DRAW) noexcept;
+  Buffer(BufferType type, const uint8_t* data, std::size_t size, BufferUsage usage = BufferUsage::STATIC_DRAW) noexcept;
   Buffer(Buffer&& other) noexcept;
   Buffer& operator=(Buffer&& other) noexcept;
   ~Buffer();
