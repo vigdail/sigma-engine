@@ -26,14 +26,16 @@ class Mesh {
   ~Mesh();
   void bind() const;
   void unbind() const;
-  void addVertexBuffer(VertexBuffer&& buffer);
-  void setIndexBuffer(IndexBuffer&& buffer);
+  void addVertexBuffer(Buffer&& buffer, const BufferLayout& layout);
+  void setIndexBuffer(Buffer&& buffer);
 
-  bool isIndexed() const { return index_buffer_.has_value(); }
+  bool isIndexed() const { return is_indexed_; }
 
   void setCount(uint32_t count) { count_ = count; }
 
-  size_t count() const { return count_; }
+  size_t count() const {
+    return count_;
+  }
 
   PrimitiveTopology getTopology() const;
 
@@ -42,9 +44,9 @@ class Mesh {
  private:
   uint32_t id_{};
   size_t count_;
+  bool is_indexed_{false};
   PrimitiveTopology topology_;
-  std::vector<VertexBuffer> vertex_buffers_;
-  std::optional<IndexBuffer> index_buffer_;
+  std::vector<Buffer> buffers_;
 };
 
 using MeshHandle = Ref<Mesh>;

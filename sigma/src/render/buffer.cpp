@@ -2,62 +2,70 @@
 
 namespace sigma {
 
-VertexBuffer::VertexBuffer(std::size_t size) noexcept: layout_{}, size_{size} {
+Buffer::Buffer(BufferType type, std::size_t size, BufferUsage usage) noexcept: size_{size}, type_{type}, usage_{usage} {
   glCreateBuffers(1, &id_);
-  glBindBuffer(GL_ARRAY_BUFFER, id_);
-  glBufferData(GL_ARRAY_BUFFER, size, nullptr, GL_DYNAMIC_DRAW);
 }
 
-VertexBuffer::~VertexBuffer() {
-  glDeleteBuffers(1, &id_);
-  id_ = 0;
+Buffer::Buffer(BufferType type, const void* data, std::size_t size, BufferUsage usage) noexcept: Buffer{type, size,
+                                                                                                        usage} {
+  glBindBuffer((GLenum)type_, id_);
+  glBufferData((GLenum)type_, size, data, (GLenum)usage_);
 }
 
-VertexBuffer::VertexBuffer(VertexBuffer&& other) noexcept
-    : id_{std::exchange(other.id_, 0)},
-      layout_{std::move(other.layout_)},
-      size_{std::exchange(other.size_, 0)} {}
+Buffer::Buffer(Buffer&& other) noexcept {
+  id_ = other.id_;
+  size_ = other.size_;
+  type_ = other.type_;
+  usage_ = other.usage_;
 
-VertexBuffer& VertexBuffer::operator=(VertexBuffer&& other) noexcept {
-  std::swap(id_, other.id_);
-  std::swap(layout_, other.layout_);
-  std::swap(size_, other.size_);
+  other.id_ = 0;
+  other.size_ = 0;
+  other.type_ = BufferType::VERTEX;
+  other.usage_ = BufferUsage::STATIC_DRAW;
+}
+
+Buffer& Buffer::operator=(Buffer&& other) noexcept {
+  drop();
+
+  id_ = other.id_;
+  size_ = other.size_;
+  type_ = other.type_;
+  usage_ = other.usage_;
+
+  other.id_ = 0;
+  other.size_ = 0;
+  other.type_ = BufferType::VERTEX;
+  other.usage_ = BufferUsage::STATIC_DRAW;
+
   return *this;
 }
 
-void VertexBuffer::bind() const { glBindBuffer(GL_ARRAY_BUFFER, id_); }
-
-void VertexBuffer::unbind() const { glBindBuffer(GL_ARRAY_BUFFER, 0); }
-
-BufferLayout VertexBuffer::getLayout() const { return layout_; }
-
-IndexBuffer::IndexBuffer(const std::vector<uint32_t>& indices) noexcept
-    : count_{indices.size()} {
-  glCreateBuffers(1, &id_);
-  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, id_);
-  glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(uint32_t),
-               indices.data(), GL_STATIC_DRAW);
+void Buffer::setSubData(const uint8_t* data, std::size_t size, std::size_t offset) {
+  assert(size + offset <= size_);
+  bind();
+  glBufferSubData((GLenum)type_, offset, size_, data);
 }
 
-IndexBuffer::~IndexBuffer() {
-  glDeleteBuffers(1, &id_);
-  id_ = 0;
+void Buffer::bind() const {
+  glBindBuffer((GLenum)type_, id_);
 }
 
-IndexBuffer::IndexBuffer(IndexBuffer&& other) noexcept
-    : id_{std::exchange(other.id_, 0)},
-      count_{std::exchange(other.count_, 0)} {}
-
-IndexBuffer& IndexBuffer::operator=(IndexBuffer&& other) noexcept {
-  std::swap(id_, other.id_);
-  std::swap(count_, other.count_);
-  return *this;
+void Buffer::unbind() const {
+  glBindBuffer((GLenum)type_, 0);
 }
 
-void IndexBuffer::bind() const { glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, id_); }
+void Buffer::bindBase(std::size_t index) const {
+  glBindBufferBase((GLenum)type_, index, id_);
+}
 
-void IndexBuffer::unbind() const { glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0); }
+Buffer::~Buffer() {
+  drop();
+}
 
-std::size_t IndexBuffer::count() const { return count_; }
-
+void Buffer::drop() {
+  if (this->id_ != 0) {
+    glDeleteBuffers(1, &id_);
+    id_ = 0;
+  }
+}
 }

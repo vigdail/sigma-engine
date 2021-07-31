@@ -11,8 +11,7 @@ Mesh::Mesh(Mesh&& other) noexcept
     : id_{other.id_},
       count_{other.count_},
       topology_{other.topology_},
-      vertex_buffers_{std::move(other.vertex_buffers_)},
-      index_buffer_{std::move(other.index_buffer_)} {
+      is_indexed_{other.is_indexed_} {
   other.id_ = 0;
 }
 
@@ -20,8 +19,7 @@ Mesh& Mesh::operator=(Mesh&& other) noexcept {
   std::swap(id_, other.id_);
   std::swap(count_, other.count_);
   std::swap(topology_, other.topology_);
-  std::swap(vertex_buffers_, other.vertex_buffers_);
-  std::swap(index_buffer_, other.index_buffer_);
+  std::swap(is_indexed_, other.is_indexed_);
   return *this;
 }
 
@@ -34,13 +32,14 @@ void Mesh::bind() const { glBindVertexArray(id_); }
 
 void Mesh::unbind() const { glBindVertexArray(0); }
 
-PrimitiveTopology Mesh::getTopology() const { return topology_; }
+PrimitiveTopology Mesh::getTopology() const {
+  return topology_;
+}
 
-void Mesh::addVertexBuffer(VertexBuffer&& buffer) {
+void Mesh::addVertexBuffer(Buffer&& buffer, const BufferLayout& layout) {
   glBindVertexArray(id_);
   buffer.bind();
 
-  auto layout = buffer.getLayout();
   for (const auto& element : layout.attributes) {
     glEnableVertexAttribArray(element.location);
     glVertexAttribPointer(element.location, element.count,
@@ -49,14 +48,14 @@ void Mesh::addVertexBuffer(VertexBuffer&& buffer) {
                           layout.stride, reinterpret_cast<const void*>(element.offset));
   }
 
-  vertex_buffers_.push_back(std::move(buffer));
+  buffers_.emplace_back(std::move(buffer));
 }
 
-void Mesh::setIndexBuffer(IndexBuffer&& buffer) {
+void Mesh::setIndexBuffer(Buffer&& buffer) {
   glBindVertexArray(id_);
   buffer.bind();
-
-  index_buffer_ = std::move(buffer);
+  is_indexed_ = true;
+  buffers_.emplace_back(std::move(buffer));
 }
 
 }

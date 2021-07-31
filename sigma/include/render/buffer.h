@@ -6,92 +6,42 @@
 
 namespace sigma {
 
-class VertexBuffer final : public NonCopyable {
- public:
-  explicit VertexBuffer(std::size_t size) noexcept;
-
-  template<typename Vertex>
-  VertexBuffer(const std::vector<Vertex>& vertices, BufferLayout layout) noexcept
-      : layout_{std::move(layout)}, size_{vertices.size() * sizeof(Vertex)} {
-    glCreateBuffers(1, &id_);
-    glBindBuffer(GL_ARRAY_BUFFER, id_);
-    glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(Vertex),
-                 vertices.data(), GL_STATIC_DRAW);
-  }
-
-  ~VertexBuffer();
-
-  VertexBuffer(VertexBuffer&& other) noexcept;
-  VertexBuffer& operator=(VertexBuffer&& other) noexcept;
-
-  template<typename Vertex>
-  void setData(const std::vector<Vertex>& vertices,
-               const BufferLayout& layout) {
-    assert(vertices.size() * sizeof(Vertex) <= size_);
-
-    glBindBuffer(GL_ARRAY_BUFFER, id_);
-    glBufferSubData(GL_ARRAY_BUFFER, 0, vertices.size() * sizeof(Vertex), vertices.data());
-  }
-
-  void bind() const;
-  void unbind() const;
-  BufferLayout getLayout() const;
-
- private:
-  uint32_t id_{};
-  BufferLayout layout_{};
-  std::size_t size_{};
+enum class BufferType {
+  VERTEX = GL_ARRAY_BUFFER,
+  INDEX = GL_ELEMENT_ARRAY_BUFFER,
+  UNIFORM = GL_UNIFORM_BUFFER,
 };
 
-class IndexBuffer final : public NonCopyable {
- public:
-  explicit IndexBuffer(const std::vector<uint32_t>& indices) noexcept;
-  IndexBuffer(IndexBuffer&& other) noexcept;
-  IndexBuffer& operator=(IndexBuffer&& other) noexcept;
-  ~IndexBuffer();
-  void bind() const;
-  void unbind() const;
-  std::size_t count() const;
-
- private:
-  uint32_t id_{};
-  std::size_t count_{};
+enum class BufferUsage {
+  STREAM_DRAW = GL_STREAM_DRAW,
+  STREAM_READ = GL_STREAM_READ,
+  STREAM_COPY = GL_STREAM_COPY,
+  STATIC_DRAW = GL_STATIC_DRAW,
+  STATIC_READ = GL_STATIC_READ,
+  STATIC_COPY = GL_STATIC_COPY,
+  DYNAMIC_DRAW = GL_DYNAMIC_DRAW,
+  DYNAMIC_READ = GL_DYNAMIC_READ,
+  DYNAMIC_COPY = GL_DYNAMIC_COPY,
 };
 
-class UniformBuffer final : public NonCopyable {
+class Buffer final : public NonCopyable {
  public:
-  explicit UniformBuffer(std::size_t size) noexcept {
-    glCreateBuffers(1, &id_);
-    glBindBuffer(GL_UNIFORM_BUFFER, id_);
-    glBufferData(GL_UNIFORM_BUFFER, size, nullptr, GL_DYNAMIC_DRAW);
-    glBindBuffer(GL_UNIFORM_BUFFER, 0);
-  }
-
-  ~UniformBuffer() {
-    glDeleteBuffers(1, &id_);
-    id_ = 0;
-  }
-
-  void bindBase(int binding) const {
-    glBindBufferBase(GL_UNIFORM_BUFFER, binding, id_);
-  }
-
-  void setData(const void* data, std::size_t start, std::size_t size) {
-    bind();
-    glBufferSubData(GL_UNIFORM_BUFFER, start, size, data);
-    unbind();
-  }
-
-  void bind() const {
-    glBindBuffer(GL_UNIFORM_BUFFER, id_);
-  }
-
-  void unbind() const {
-    glBindBuffer(GL_UNIFORM_BUFFER, 0);
-  }
+  Buffer(BufferType type, std::size_t size, BufferUsage usage) noexcept;
+  Buffer(BufferType type, const void* data, std::size_t size, BufferUsage usage = BufferUsage::STATIC_DRAW) noexcept;
+  Buffer(Buffer&& other) noexcept;
+  Buffer& operator=(Buffer&& other) noexcept;
+  ~Buffer();
+  void drop();
+  void setSubData(const uint8_t* data, std::size_t size, std::size_t offset);
+  void bind() const;
+  void unbind() const;
+  void bindBase(std::size_t index) const;
 
  private:
-  uint32_t id_{};
+  uint32_t id_;
+  BufferType type_{BufferType::VERTEX};
+  BufferUsage usage_{BufferUsage::STATIC_DRAW};
+  std::size_t size_{0};
 };
 
 }

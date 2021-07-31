@@ -12,8 +12,10 @@ MeshHandle MeshFactory::createQuad() {
   std::vector<uint32_t> indices = {0, 2, 1, 2, 3, 1};
 
   MeshHandle mesh = createRef<Mesh>(PrimitiveTopology::TRIANGLE, indices.size());
-  mesh->addVertexBuffer(VertexBuffer(vertices, SimpleVertex::getLayout()));
-  mesh->setIndexBuffer(IndexBuffer(indices));
+  mesh->addVertexBuffer(
+      Buffer(BufferType::VERTEX, (const uint8_t*)vertices.data(), vertices.size() * sizeof(SimpleVertex)),
+      SimpleVertex::getLayout());
+  mesh->setIndexBuffer(Buffer(BufferType::INDEX, (const uint8_t*)indices.data(), indices.size() * sizeof(indices[0])));
 
   return mesh;
 }
@@ -60,15 +62,12 @@ MeshHandle MeshFactory::createCube() {
   };
 
   MeshHandle mesh = createRef<Mesh>(PrimitiveTopology::TRIANGLE, indices.size());
-  mesh->
-      addVertexBuffer(VertexBuffer(vertices, SimpleVertex::getLayout())
-  );
-  mesh->
-      setIndexBuffer(IndexBuffer(indices)
-  );
+  mesh->addVertexBuffer(
+      Buffer(BufferType::VERTEX, (const uint8_t*)vertices.data(), vertices.size() * sizeof(SimpleVertex)),
+      SimpleVertex::getLayout());
+  mesh->setIndexBuffer(Buffer(BufferType::INDEX, (const uint8_t*)indices.data(), indices.size() * sizeof(indices[0])));
 
-  return
-      mesh;
+  return mesh;
 }
 
 }
