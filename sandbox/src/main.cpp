@@ -11,6 +11,30 @@ struct Moving {
   bool data;
 };
 
+class CursorHideSystem : public sigma::System {
+ public:
+  void update(sigma::World& world) override {
+    const auto& events = world.resource<sigma::EventBus<sigma::Event>>().events;
+    for (const auto& event: events) {
+      std::visit(sigma::overloaded{
+          [&](sigma::input_event::InputEvent ev) {
+            std::visit(sigma::overloaded{
+                           [&](sigma::input_event::KeyPressed event) {
+                             if (event.key == sigma::KeyCode::SPACE) {
+                               auto& window = world.resource<sigma::Window>();
+                               window.toggleCursor();
+                             }
+                           },
+                           [](auto) {},
+                       },
+                       ev);
+          },
+          [](auto) {},
+      }, event);
+    }
+  }
+};
+
 class MoveSystem : public sigma::System {
  public:
   void update(sigma::World& world) override {
@@ -181,6 +205,7 @@ int main() {
       .withSystem(std::make_shared<sigma::InputSystem>())
       .withSystem(std::make_shared<sigma::RenderSystem>())
       .withSystem(std::make_shared<MoveSystem>())
+      .withSystem(std::make_shared<CursorHideSystem>())
       .withSystem(std::make_shared<CameraSystem>());
   sigma::Application app(std::make_shared<LoadingState>(), data);
   app.run();
