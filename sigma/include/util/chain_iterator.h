@@ -80,7 +80,7 @@ class Chain {
     }
 
     DerefType dereference(std::index_sequence<>) {
-      std::cout << "UNREACHABLE\n";
+      return {};
     }
 
     template<size_t I, size_t... Is>
