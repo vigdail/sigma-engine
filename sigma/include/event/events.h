@@ -11,7 +11,6 @@ using ReaderHandle = std::size_t;
 template<typename T>
 class Events {
  public:
-
   class EventReader {
     std::size_t last_event_count_;
     const Events<T>& events_;

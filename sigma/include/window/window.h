@@ -62,11 +62,6 @@ struct WindowConfig {
   int height = 600;
 };
 
-template<typename T>
-Events<T>& getBus(World& world, T) {
-  return world.eventBus<T>();
-}
-
 class WindowSystem : public System {
  public:
   explicit WindowSystem(WindowConfig config) : config_(config) {
@@ -102,6 +97,12 @@ class WindowSystem : public System {
 
  private:
   WindowConfig config_;
+
+ private:
+  template<typename T>
+  static Events<T>& getBus(World& world, T) {
+    return world.eventBus<T>();
+  }
 };
 
 }  // namespace sigma
