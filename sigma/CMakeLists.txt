@@ -5,7 +5,7 @@ file(GLOB_RECURSE ENGINE_SOURCES
         ${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp
         )
 
-SET(ENGINE_SOURCES ${ENGINE_SOURCES} ${ENGINE_INCLUDES} src/render/buffer.cpp include/render/buffer.h src/render/mesh.cpp include/render/mesh.h src/render/mesh_factory.cpp include/render/mesh_factory.h include/core/components.h src/render/texture.cpp include/render/texture.h src/render/frame_buffer.cpp include/render/frame_buffer.h src/components/point_light.cpp include/components/point_light.h include/core/time_system.h)
+SET(ENGINE_SOURCES ${ENGINE_SOURCES} ${ENGINE_INCLUDES} src/render/buffer.cpp include/render/buffer.h src/render/mesh.cpp include/render/mesh.h src/render/mesh_factory.cpp include/render/mesh_factory.h include/core/components.h src/render/texture.cpp include/render/texture.h src/render/frame_buffer.cpp include/render/frame_buffer.h src/components/point_light.cpp include/components/point_light.h include/core/time_system.h src/event/events.cpp include/event/events.h include/util/chain_iterator.h)
 
 add_library(sigma STATIC ${ENGINE_SOURCES})
 

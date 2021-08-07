@@ -63,7 +63,7 @@ struct WindowConfig {
 };
 
 template<typename T>
-EventBus<T>& getBus(World& world, T) {
+Events<T>& getBus(World& world, T) {
   return world.eventBus<T>();
 }
 
@@ -95,7 +95,7 @@ class WindowSystem : public System {
     for (auto event: window_events) {
       std::visit([&](const auto& ev) {
         auto& bus = getBus(world, ev);
-        bus.events.emplace_back(ev);
+        bus.send(ev);
       }, event);
     }
   }

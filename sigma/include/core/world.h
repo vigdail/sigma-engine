@@ -2,7 +2,7 @@
 
 #include <functional>
 #include "pch.h"
-#include <event/event.h>
+#include "event/events.h"
 #include <utility>
 
 namespace sigma {
@@ -34,20 +34,21 @@ class World {
 
   template<class T>
   void addEvent() {
-    addResource<EventBus<T>>();
-    event_clear_callbacks_.push_back([this]() {
-      auto& events = resource<EventBus<T>>().events;
-      events.clear();
+    addResource<Events<T>>();
+
+    event_update_callbacks_.push_back([this]() {
+      auto& events = resource<Events<T>>();
+      events.update();
     });
   }
 
   template<typename T>
-  EventBus<T>& eventBus() {
-    return resource<EventBus<T>>();
+  Events<T>& eventBus() {
+    return resource<Events<T>>();
   }
 
-  void clearEvents() {
-    for (const auto& cb: event_clear_callbacks_) {
+  void updateEvents() {
+    for (const auto& cb: event_update_callbacks_) {
       cb();
     }
   }
@@ -58,7 +59,7 @@ class World {
 
  private:
   entt::registry registry_;
-  std::vector<std::function<void()>> event_clear_callbacks_;
+  std::vector<std::function<void()>> event_update_callbacks_;
 };
 
 }  // namespace sigma

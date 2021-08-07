@@ -1,5 +1,6 @@
 #pragma once
 
+#include <event/events.h>
 #include "entity.h"
 #include "event/event.h"
 #include "game_data.h"
@@ -9,18 +10,12 @@
 #include "window/window.h"
 #include "world.h"
 
-#include <memory>
-#include <utility>
-#include <vector>
-
 namespace sigma {
 
 class Application {
  public:
   Application(Ref<State> state, GameDataBuilder data_builder)
-      : data_(data_builder.build()), states_(StateMachine(state)) {
-    world_.addResource<EventBus<Event>>();
-  }
+      : data_(data_builder.build()), states_(StateMachine(state)) {}
 
   virtual ~Application() = default;
 
@@ -34,7 +29,7 @@ class Application {
       data_.update(world_);
       states_.update(StateData(world_, data_));
 
-      world_.clearEvents();
+      world_.updateEvents();
     }
 
     std::cout << "[LOG] Application shutdown" << std::endl;

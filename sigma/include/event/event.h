@@ -7,10 +7,10 @@
 
 namespace sigma {
 
-template<typename T>
-struct EventBus {
-  std::vector<T> events;
-};
+//template<typename T>
+//struct EventBus {
+//  std::vector<T> events;
+//};
 
 namespace window_event {
 

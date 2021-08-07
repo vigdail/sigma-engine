@@ -7,6 +7,7 @@
 #include <utility>
 #include <variant>
 #include <vector>
+#include <memory>
 
 #include <entt/entt.hpp>
 

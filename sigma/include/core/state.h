@@ -38,12 +38,13 @@ std::variant<transition::None, transition::Pop, transition::Push, transition::Sw
 
 class State {
  public:
-  State() {
-  }
+  State() = default;
 
   virtual ~State() = default;
 
   virtual void onStart(StateData data) {
+    window_close_reader_ = data.world.eventBus<window_event::CloseRequested>().registerReader();
+    window_destroyed_reader_ = data.world.eventBus<window_event::Destroyed>().registerReader();
   }
 
   virtual void onStop(StateData data) {
@@ -56,13 +57,13 @@ class State {
   }
 
   virtual Transition update(StateData data) {
-    const auto& events = data.world.resource<EventBus<window_event::CloseRequested>>().events;
-    if (!events.empty()) {
+    auto events = data.world.eventBus<window_event::CloseRequested>().read(window_close_reader_);
+    for (const auto& e: events) {
       return transition::Quit();
     }
 
-    const auto& destroyed_events = data.world.resource<EventBus<window_event::Destroyed>>().events;
-    if (!destroyed_events.empty()) {
+    auto destroyed_events = data.world.eventBus<window_event::Destroyed>().read(window_destroyed_reader_);
+    for (const auto& e: destroyed_events) {
       return transition::Quit();
     }
     return transition::None();
@@ -71,6 +72,10 @@ class State {
   virtual Transition fixedUpdate(StateData data) {
     return transition::None();
   }
+
+ private:
+  ReaderHandle window_close_reader_;
+  ReaderHandle window_destroyed_reader_;
 };
 
 class StateMachine {
@@ -109,7 +114,7 @@ class StateMachine {
       return;
     }
 
-    Ref<State> state = states_.back();
+    auto state = states_.back();
     Transition transition = state->update(data);
 
     transit(transition, data);

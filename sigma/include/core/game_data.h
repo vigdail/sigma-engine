@@ -23,7 +23,7 @@ class Dispatcher {
     }
   }
   void addSystem(const std::shared_ptr<System>& system) {
-    systems_.push_back(std::move(system));
+    systems_.push_back(system);
   }
 
  private:

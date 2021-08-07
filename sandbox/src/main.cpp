@@ -14,12 +14,10 @@ struct Moving {
 class CursorHideSystem : public sigma::System {
  public:
   void update(sigma::World& world) override {
-    const auto& events = world.eventBus<sigma::input_event::KeyPressed>().events;
-    for (const auto& event: events) {
-      if (event.key == sigma::KeyCode::SPACE) {
-        auto& window = world.resource<sigma::Window>();
-        window.toggleCursor();
-      }
+    auto& input = world.resource<sigma::Input>();
+    if (input.getKeyState(sigma::KeyCode::SPACE) == sigma::KeyState::PRESSED) {
+      auto& window = world.resource<sigma::Window>();
+      window.toggleCursor();
     }
   }
 };
@@ -72,46 +70,30 @@ class CameraSystem : public sigma::System {
 
  private:
   void handleMouse(sigma::World& world) {
-    dx_ = 0.0f;
-    dy_ = 0.0f;
-
-    const auto& bus = world.eventBus<sigma::input_event::MouseMoved>();
-    for (auto& e: bus.events) {
-      onMouseMoved(world, e);
-    }
+    auto input = world.resource<sigma::Input>();
+    auto move = input.getMouseMove();
+    dx_ = move.x;
+    dy_ = move.y;
   }
 
   void handleKeyboard(sigma::World& world) {
     auto input = world.resource<sigma::Input>();
 
     glm::vec3 dir{0.0f};
-    if (input.getKeyState(sigma::KeyCode::W) == sigma::KeyState::PRESSED) {
+    if (input.isPressedOrDown(sigma::KeyCode::W)) {
       dir.z += 1.0f;
     }
-    if (input.getKeyState(sigma::KeyCode::S) == sigma::KeyState::PRESSED) {
+    if (input.isPressedOrDown(sigma::KeyCode::S)) {
       dir.z -= 1.0f;
     }
-    if (input.getKeyState(sigma::KeyCode::A) == sigma::KeyState::PRESSED) {
+    if (input.isPressedOrDown(sigma::KeyCode::A)) {
       dir.x -= 1.0f;
     }
-    if (input.getKeyState(sigma::KeyCode::D) == sigma::KeyState::PRESSED) {
+    if (input.isPressedOrDown(sigma::KeyCode::D)) {
       dir.x += 1.0f;
     }
 
     dir_ = dir;
-  }
-
-  void onMouseMoved(sigma::World& world, const sigma::input_event::MouseMoved& event) {
-    if (is_first_) {
-      is_first_ = false;
-      last_x_ = event.x;
-      last_y_ = event.y;
-    }
-    dx_ = event.x - last_x_;
-    dy_ = event.y - last_y_;
-
-    last_x_ = event.x;
-    last_y_ = event.y;
   }
 };
 
@@ -175,6 +157,7 @@ class GameState : public sigma::State {
 struct LoadingState : public sigma::State {
  public:
   void onStart(sigma::StateData state_data) override {
+    sigma::State::onStart(state_data);
     std::cout << "[LOG] Loading start" << std::endl;
   }
 
@@ -186,8 +169,8 @@ struct LoadingState : public sigma::State {
 int main() {
   auto data = sigma::GameDataBuilder()
       .withSystem(std::make_shared<sigma::WindowSystem>(sigma::WindowConfig{960, 540}))
-      .withSystem(std::make_shared<sigma::TimeSystem>())
       .withSystem(std::make_shared<sigma::InputSystem>())
+      .withSystem(std::make_shared<sigma::TimeSystem>())
       .withSystem(std::make_shared<sigma::RenderSystem>())
       .withSystem(std::make_shared<MoveSystem>())
       .withSystem(std::make_shared<CursorHideSystem>())
