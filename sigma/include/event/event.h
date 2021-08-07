@@ -7,10 +7,10 @@
 
 namespace sigma {
 
-template<typename T>
-struct EventBus {
-  std::vector<T> events;
-};
+//template<typename T>
+//struct EventBus {
+//  std::vector<T> events;
+//};
 
 namespace window_event {
 
@@ -32,13 +32,7 @@ struct Focused {
   bool focused;
 };
 
-using WindowEvent = std::variant<Resized, Moved, CloseRequested, Destroyed, Focused>;
-
 }// namespace window_event
-
-struct UIEvent {
-  //
-};
 
 namespace input_event {
 
@@ -65,11 +59,20 @@ struct MouseWheelMoved {
   float delta;
 };
 
-using InputEvent =
-    std::variant<KeyPressed, KeyReleased, MouseMoved, MouseButtonPressed, MouseButtonReleased, MouseWheelMoved>;
-
 }// namespace input_event
 
-using Event = std::variant<window_event::WindowEvent, UIEvent, input_event::InputEvent>;
+using Event = std::variant<
+    window_event::Resized,
+    window_event::Moved,
+    window_event::CloseRequested,
+    window_event::Destroyed,
+    window_event::Focused,
+    input_event::KeyPressed,
+    input_event::KeyReleased,
+    input_event::MouseMoved,
+    input_event::MouseButtonPressed,
+    input_event::MouseButtonReleased,
+    input_event::MouseWheelMoved
+>;
 
 }// namespace sigma

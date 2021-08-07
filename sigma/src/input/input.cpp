@@ -2,8 +2,8 @@
 
 namespace sigma {
 
-// TODO
 void Input::update() {
+  mouse_move_ = glm::vec2();
   for (auto& key : key_states_) {
     cycleKeyState(key.second);
   }
@@ -65,6 +65,11 @@ void Input::cycleKeyState(KeyState& state) {
   } else if (state == KeyState::RELEASED) {
     state = KeyState::UP;
   }
+}
+
+bool Input::isPressedOrDown(KeyCode key) const {
+  auto state = getKeyState(key);
+  return state == KeyState::PRESSED || state == KeyState::DOWN;
 }
 
 }  // namespace sigma

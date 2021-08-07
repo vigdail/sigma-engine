@@ -14,6 +14,7 @@
 #include "core/system.h"
 #include "core/world.h"
 #include "event/event.h"
+#include "util/util.h"
 
 namespace sigma {
 
@@ -61,6 +62,11 @@ struct WindowConfig {
   int height = 600;
 };
 
+template<typename T>
+Events<T>& getBus(World& world, T) {
+  return world.eventBus<T>();
+}
+
 class WindowSystem : public System {
  public:
   explicit WindowSystem(WindowConfig config) : config_(config) {
@@ -68,15 +74,30 @@ class WindowSystem : public System {
 
   void start(World& world) override {
     world.addResource<Window>(config_.width, config_.height);
-    world.addResource<EventBus<Event>>();
+    world.addEvent<window_event::Resized>();
+    world.addEvent<window_event::Moved>();
+    world.addEvent<window_event::CloseRequested>();
+    world.addEvent<window_event::Destroyed>();
+    world.addEvent<window_event::Focused>();
+    world.addEvent<input_event::KeyPressed>();
+    world.addEvent<input_event::KeyReleased>();
+    world.addEvent<input_event::MouseMoved>();
+    world.addEvent<input_event::MouseButtonPressed>();
+    world.addEvent<input_event::MouseButtonReleased>();
+    world.addEvent<input_event::MouseWheelMoved>();
   }
 
   void update(World& world) override {
     auto& window = world.resource<Window>();
     window.swapBuffers();
 
-    auto& events = world.resource<EventBus<Event>>();
-    events.events = std::move(window.pollEvents());
+    auto window_events = window.pollEvents();
+    for (auto event: window_events) {
+      std::visit([&](const auto& ev) {
+        auto& bus = getBus(world, ev);
+        bus.send(ev);
+      }, event);
+    }
   }
 
  private:

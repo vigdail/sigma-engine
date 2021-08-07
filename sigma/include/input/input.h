@@ -18,15 +18,12 @@ enum class KeyState {
   PRESSED,
 };
 
-class Input {
+class Input final {
  public:
-  Input() : key_states_(), mouse_button_states_(), mouse_position_(glm::vec2(0.0f)) {
-  }
-  virtual ~Input() = default;
-
   void update();
   KeyState getKeyState(KeyCode key) const;
   KeyState getMouseButtonState(MouseButton button) const;
+  bool isPressedOrDown(KeyCode key) const;
   glm::vec2 getMousePosition() const;
   glm::vec2 getMouseMove() const;
   void onKeyPressed(KeyCode key);
@@ -49,34 +46,51 @@ class InputSystem : public System {
  public:
   void start(World& world) override {
     world.addResource<Input>();
+
+    // @TODO: refactor this in some way
+    readers_.insert({"key_pressed", world.eventBus<input_event::KeyPressed>().registerReader()});
+    readers_.insert({"key_released", world.eventBus<input_event::KeyReleased>().registerReader()});
+    readers_.insert({"mouse_button_pressed", world.eventBus<input_event::MouseButtonPressed>().registerReader()});
+    readers_.insert({"mouse_button_released", world.eventBus<input_event::MouseButtonReleased>().registerReader()});
+    readers_.insert({"mouse_moved", world.eventBus<input_event::MouseMoved>().registerReader()});
+    readers_.insert({"mouse_wheel_moved", world.eventBus<input_event::MouseWheelMoved>().registerReader()});
   }
 
   void update(World& world) override {
-    auto& bus = world.resource<sigma::EventBus<sigma::Event>>();
+    auto& input = world.resource<Input>();
+    input.update();
 
-    for (auto& e : bus.events) {
-      std::visit(overloaded{
-                     [&](sigma::input_event::InputEvent ev) { onEvent(world, ev); },
-                     [](auto) {},
-                 },
-                 e);
-    }
+    onEvent<input_event::KeyPressed>(world, "key_pressed", [&](const auto& e) {
+      input.onKeyPressed(e.key);
+    });
+    onEvent<input_event::KeyReleased>(world, "key_released", [&](const auto& e) {
+      input.onKeyReleased(e.key);
+    });
+    onEvent<input_event::MouseButtonPressed>(world, "mouse_button_pressed", [&](const auto& e) {
+      input.onMouseButtonPressed(e.button);
+    });
+    onEvent<input_event::MouseButtonReleased>(world, "mouse_button_released", [&](const auto& e) {
+      input.onMouseButtonReleased(e.button);
+    });
+    onEvent<input_event::MouseMoved>(world, "mouse_moved", [&](const auto& e) {
+      input.onMouseMoved(e.x, e.y);
+    });
+    onEvent<input_event::MouseWheelMoved>(world, "mouse_wheel_moved", [&](const auto& e) {
+      // TODO
+    });
   }
 
  private:
-  void onEvent(World& world, input_event::InputEvent event) {
-    auto& input = world.resource<Input>();
-    std::visit(overloaded{
-                   [&](sigma::input_event::KeyPressed e) { input.onKeyPressed(e.key); },
-                   [&](sigma::input_event::KeyReleased e) { input.onKeyReleased(e.key); },
-                   [&](sigma::input_event::MouseButtonPressed e) { input.onMouseButtonPressed(e.button); },
-                   [&](sigma::input_event::MouseButtonReleased e) { input.onMouseButtonReleased(e.button); },
-                   [&](sigma::input_event::MouseMoved e) { input.onMouseMoved(e.x, e.y); },
-                   [&](sigma::input_event::MouseWheelMoved e) { /* @TODO */ },
-                   [](auto) {},
-               },
-               event);
-  }
+  std::unordered_map<const char*, ReaderHandle> readers_;
+
+ private:
+  template<typename T>
+  void onEvent(World& world, const char* reader_name, std::function<void(const T&)> f) {
+    auto events = world.eventBus<T>().read(readers_.at(reader_name));
+    for (const auto& e: events) {
+      f(e);
+    }
+  };
 };
 
 }  // namespace sigma
