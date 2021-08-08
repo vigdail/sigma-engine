@@ -7,6 +7,8 @@
 #include <components/point_light.h>
 #include <core/time_system.h>
 
+#include <resources/resource_manager.h>
+
 struct Moving {
   bool data;
 };
@@ -112,14 +114,13 @@ class GameState : public sigma::State {
     auto m = sigma::MeshFactory::createCube();
     sigma::MeshComponent mesh{m};
 
-    auto texture = sigma::TextureBuilder()
-        .load("../assets/textures/cross.png")
-        .build();
+    auto& rm = state_data.world.resource<sigma::ResourceManager<sigma::Texture>>();
+    auto albedo = rm.request("../assets/textures/cross.png");
 
     auto cube = world.createEntity();
     cube.addComponent<sigma::Transform>(glm::vec3(0.0f, 0.0f, 2.0f));
     cube.addComponent<sigma::MeshComponent>(mesh);
-    cube.addComponent<sigma::PbrMaterial>(texture);
+    cube.addComponent<sigma::PbrMaterial>(albedo);
     cube.addComponent<Moving>();
 
     sigma::Transform tr;

@@ -26,7 +26,7 @@ FrameBuffer::FrameBuffer(FrameBuffer::Descriptor descriptor) noexcept
     view.height = descriptor_.height;
     view.internal_format = format;
 
-    TextureHandle texture = TextureBuilder().withView(view).build();
+    Ref<Texture> texture = TextureBuilder().withView(view).build();
 
     auto att = GL_COLOR_ATTACHMENT0 + index++;
     atts.push_back(att);
@@ -45,7 +45,7 @@ FrameBuffer::FrameBuffer(FrameBuffer::Descriptor descriptor) noexcept
     view.internal_format = descriptor_.depth_format;
     view.type = GL_FLOAT;
 
-    TextureHandle texture = TextureBuilder().withView(view).build();
+    Ref<Texture> texture = TextureBuilder().withView(view).build();
 
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT,
                            texture_target(descriptor_.is_multisampled),

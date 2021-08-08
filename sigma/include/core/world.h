@@ -9,12 +9,10 @@ namespace sigma {
 
 class Entity;
 
-class World {
+class World final {
   friend Entity;
 
  public:
-  World() = default;
-  ~World() = default;
   Entity createEntity();
 
   template<typename T>

@@ -24,9 +24,9 @@ class FrameBuffer {
   FrameBuffer& operator=(FrameBuffer&&) noexcept;
   virtual ~FrameBuffer();
 
-  TextureHandle getTexture(int i) { return color_attachments_[i]; }
+  Ref<Texture> getTexture(int i) { return color_attachments_[i]; }
 
-  TextureHandle getDepth() { return depth_attachment_; }
+  Ref<Texture> getDepth() { return depth_attachment_; }
 
   void bind() const;
   void unbind() const;
@@ -37,8 +37,8 @@ class FrameBuffer {
  protected:
   uint32_t id_{};
   Descriptor descriptor_;
-  std::vector<TextureHandle> color_attachments_;
-  TextureHandle depth_attachment_;
+  std::vector<Ref < Texture>> color_attachments_;
+  Ref<Texture> depth_attachment_;
 
  private:
   void drop();

@@ -24,10 +24,10 @@ struct PbrMaterial {
 };
 
 struct DummyTextures {
-  TextureHandle white;
-  TextureHandle black;
-  TextureHandle red;
-  TextureHandle normal;
+  Ref<Texture> white;
+  Ref<Texture> black;
+  Ref<Texture> red;
+  Ref<Texture> normal;
 };
 
 class RenderSystem : public System {
@@ -130,33 +130,34 @@ class RenderSystem : public System {
  private:
   void bindTextures(const PbrMaterial& material, const World& world) {
     const auto& dummies = world.resource<DummyTextures>();
+    const auto& textures = world.resource<ResourceManager<Texture>>();
     if (material.albedo) {
-      material.albedo->bind(0);
+      textures.get(material.albedo)->bind(0);
     } else {
       dummies.white->bind(0);
     }
     if (material.normalmap) {
-      material.normalmap->bind(1);
+      textures.get(material.normalmap)->bind(1);
     } else {
       dummies.normal->bind(1);
     }
     if (material.metallic) {
-      material.metallic->bind(2);
+      textures.get(material.metallic)->bind(2);
     } else {
       dummies.red->bind(2);
     }
     if (material.roughness) {
-      material.roughness->bind(3);
+      textures.get(material.roughness)->bind(3);
     } else {
       dummies.red->bind(3);
     }
     if (material.ao) {
-      material.ao->bind(4);
+      textures.get(material.ao)->bind(4);
     } else {
       dummies.red->bind(4);
     }
     if (material.emission) {
-      material.emission->bind(5);
+      textures.get(material.emission)->bind(5);
     } else {
       dummies.black->bind(5);
     }
@@ -233,7 +234,7 @@ class RenderSystem : public System {
 
     unsigned char data[3] = {255, 255, 255};
 
-    TextureHandle white = TextureBuilder()
+    auto white = TextureBuilder()
         .withView(view)
         .withData(data)
         .build();
@@ -242,7 +243,7 @@ class RenderSystem : public System {
     data[0] = 0;
     data[1] = 0;
     data[2] = 0;
-    TextureHandle black = TextureBuilder()
+    auto black = TextureBuilder()
         .withView(view)
         .withData(data)
         .build();
@@ -251,7 +252,7 @@ class RenderSystem : public System {
     data[0] = 128;
     data[1] = 128;
     data[2] = 255;
-    TextureHandle normal = TextureBuilder()
+    auto normal = TextureBuilder()
         .withView(view)
         .withData(data)
         .build();
@@ -260,7 +261,7 @@ class RenderSystem : public System {
     view.image_format = GL_RED;
     view.internal_format = GL_RED;
     unsigned char red_data[1] = {255};
-    TextureHandle red = TextureBuilder()
+    auto red = TextureBuilder()
         .withView(view)
         .withData(red_data)
         .build();

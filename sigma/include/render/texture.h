@@ -3,7 +3,10 @@
 #include <glad/glad.h>
 #include <stb_image/stb_image.h>
 
+#include "resources/resource_manager.h"
+
 #include <iostream>
+#include <filesystem>
 
 namespace sigma {
 
@@ -36,6 +39,7 @@ class Texture final {
   Texture& operator=(Texture&& other) noexcept;
   ~Texture();
   void bind(uint32_t unit = 0) const;
+  bool loadFromFile(const std::filesystem::path& path);
 
   uint32_t getId() const { return id_; }
 
@@ -46,12 +50,13 @@ class Texture final {
  private:
   uint32_t id_{};
   TextureViewDescriptor view_;
+  TextureSamplerDescriptor sampler_;
 
  private:
   void drop();
 };
 
-using TextureHandle = Ref<Texture>;
+using TextureHandle = AssetHandle<Texture>;
 
 class TextureBuilder final {
  public:
@@ -60,7 +65,7 @@ class TextureBuilder final {
   TextureBuilder& withView(const TextureViewDescriptor& view);
   TextureBuilder& withData(unsigned char* data);
   TextureBuilder& load(std::string_view path);
-  TextureHandle build() const;
+  Ref<Texture> build() const;
 
  private:
   TextureSamplerDescriptor sampler_;

@@ -1,6 +1,8 @@
 #pragma once
 
 #include <event/events.h>
+#include "resources/resource_manager.h"
+#include "render/texture.h"
 #include "entity.h"
 #include "event/event.h"
 #include "game_data.h"
@@ -15,7 +17,9 @@ namespace sigma {
 class Application {
  public:
   Application(Ref<State> state, GameDataBuilder data_builder)
-      : data_(data_builder.build()), states_(StateMachine(state)) {}
+      : data_(data_builder.build()), states_(StateMachine(state)) {
+    world_.addResource<ResourceManager<Texture>>();
+  }
 
   virtual ~Application() = default;
 
