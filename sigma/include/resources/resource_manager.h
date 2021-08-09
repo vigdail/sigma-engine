@@ -7,17 +7,22 @@ namespace sigma {
 
 template<typename T>
 struct AssetHandle {
-  int id{-1};
+  static constexpr std::size_t invalid_handle = std::numeric_limits<std::size_t>::max();
 
-  operator bool() const {
-    return id >= 0;
+  std::size_t handle{invalid_handle};
+
+  bool isValid() const {
+    return handle != invalid_handle;
+  }
+
+  bool operator==(const AssetHandle<T>& other) const {
+    return handle == other.handle;
   }
 };
 
 template<typename T>
 class ResourceManager final : NonCopyable {
  public:
-
   AssetHandle<T> request(const std::filesystem::path& path) {
     if (auto it = resources_.find(path); it != resources_.end()) {
       return it->second.first;
@@ -25,7 +30,7 @@ class ResourceManager final : NonCopyable {
 
     std::shared_ptr<T> resource = std::make_shared<T>();
     if (!resource->loadFromFile(path)) {
-      return AssetHandle<T>{-1};
+      return AssetHandle<T>{};
     }
 
     auto handle = AssetHandle<T>{curret_id_++};
@@ -62,7 +67,7 @@ class ResourceManager final : NonCopyable {
   }
 
  private:
-  int curret_id_{0};
+  std::size_t curret_id_{0};
   std::unordered_map<std::string, std::pair<AssetHandle<T>, std::shared_ptr<T>>> resources_;
 };
 

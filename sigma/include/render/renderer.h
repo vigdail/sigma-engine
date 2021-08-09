@@ -131,32 +131,32 @@ class RenderSystem : public System {
   void bindTextures(const PbrMaterial& material, const World& world) {
     const auto& dummies = world.resource<DummyTextures>();
     const auto& textures = world.resource<ResourceManager<Texture>>();
-    if (material.albedo) {
+    if (material.albedo.isValid()) {
       textures.get(material.albedo)->bind(0);
     } else {
       dummies.white->bind(0);
     }
-    if (material.normalmap) {
+    if (material.normalmap.isValid()) {
       textures.get(material.normalmap)->bind(1);
     } else {
       dummies.normal->bind(1);
     }
-    if (material.metallic) {
+    if (material.metallic.isValid()) {
       textures.get(material.metallic)->bind(2);
     } else {
       dummies.red->bind(2);
     }
-    if (material.roughness) {
+    if (material.roughness.isValid()) {
       textures.get(material.roughness)->bind(3);
     } else {
       dummies.red->bind(3);
     }
-    if (material.ao) {
+    if (material.ao.isValid()) {
       textures.get(material.ao)->bind(4);
     } else {
       dummies.red->bind(4);
     }
-    if (material.emission) {
+    if (material.emission.isValid()) {
       textures.get(material.emission)->bind(5);
     } else {
       dummies.black->bind(5);
